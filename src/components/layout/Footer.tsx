@@ -1,219 +1,270 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { 
-  Heart, 
-  PhoneCall, 
-  Mail, 
-  MapPin, 
-  ShieldAlert, 
-  Clock, 
-  ExternalLink
-} from 'lucide-react';
-import { hospitalInfo } from '../../data';
+"use client";
+
+import React from "react";
+import Link from "next/link";
+import {
+  Phone,
+  Mail,
+  MapPin,
+  Clock,
+  HeartHandshake,
+  ShieldCheck,
+  ExternalLink,
+  Youtube,
+  Instagram,
+  Facebook,
+  Twitter,
+} from "lucide-react";
+import { HOSPITAL_INFO } from "@/data/hospitalData";
 
 export const Footer: React.FC = () => {
-  const currentYear = new Date().getFullYear();
-
   return (
-    <footer className="site-footer" role="contentinfo">
-      <div className="container">
-        <div className="footer-grid">
-          {/* Column 1: Hospital Overview */}
-          <div>
-            <div className="brand-logo" style={{ marginBottom: '1.25rem' }}>
-              <div className="brand-icon-box" style={{ background: '#0284c7' }}>
-                <Heart size={22} color="#ffffff" strokeWidth={2.4} />
+    <footer className="bg-navy-950 text-slate-300 pt-16 pb-12 border-t border-slate-800">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Main Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 pb-12 border-b border-slate-800">
+          {/* Column 1: Hospital Brand & Socials */}
+          <div className="space-y-4">
+            <Link href="/" className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-hospital-500 to-cyan-400 flex items-center justify-center text-navy-950 font-heading font-black text-xl">
+                IS
               </div>
-              <div className="brand-text">
-                <span className="brand-title" style={{ color: '#ffffff', fontSize: '1.3rem' }}>IndoStates</span>
-                <span className="brand-subtitle" style={{ color: '#38bdf8' }}>Hospital</span>
+              <div className="flex flex-col">
+                <span className="font-heading font-black text-lg text-white tracking-tight">
+                  INDO STATES HEALTH
+                </span>
+                <span className="text-[10px] text-cyan-400 uppercase tracking-widest font-semibold">
+                  Prevent • Screen • Treat
+                </span>
               </div>
-            </div>
+            </Link>
 
-            <p style={{ color: '#94a3b8', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '1.25rem' }}>
-              Delivering patient-first multi-specialty healthcare, 24x7 emergency and trauma resuscitation, and advanced clinical diagnostics with compassionate expertise.
+            <p className="text-sm text-slate-400 leading-relaxed">
+              The state-of-the-art healthcare to the people of India. Pioneering preventive wellness,
+              high-field 1.5 Tesla MRI, 128-slice CT, and early disease detection founded by US & Indian dual board-certified physicians.
             </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.85rem', color: '#cbd5e1' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Clock size={15} color="#38bdf8" />
-                <span>24×7 Emergency & Critical Care Services</span>
+            <div className="pt-2">
+              <span className="text-xs uppercase font-semibold text-slate-400 tracking-wider block mb-2.5">
+                Official Channels
+              </span>
+              <div className="flex items-center gap-3">
+                <a
+                  href={HOSPITAL_INFO.socials.youtube}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="YouTube Channel"
+                  className="w-8 h-8 rounded-lg bg-slate-900 hover:bg-red-600 text-slate-300 hover:text-white flex items-center justify-center transition-colors border border-slate-800"
+                >
+                  <Youtube className="w-4 h-4" />
+                </a>
+                <a
+                  href={HOSPITAL_INFO.socials.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Instagram Profile"
+                  className="w-8 h-8 rounded-lg bg-slate-900 hover:bg-pink-600 text-slate-300 hover:text-white flex items-center justify-center transition-colors border border-slate-800"
+                >
+                  <Instagram className="w-4 h-4" />
+                </a>
+                <a
+                  href={HOSPITAL_INFO.socials.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Facebook Page"
+                  className="w-8 h-8 rounded-lg bg-slate-900 hover:bg-blue-600 text-slate-300 hover:text-white flex items-center justify-center transition-colors border border-slate-800"
+                >
+                  <Facebook className="w-4 h-4" />
+                </a>
+                <a
+                  href={HOSPITAL_INFO.socials.twitter}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="X Twitter"
+                  className="w-8 h-8 rounded-lg bg-slate-900 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-colors border border-slate-800"
+                >
+                  <Twitter className="w-4 h-4" />
+                </a>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <ShieldAlert size={15} color="#f87171" />
-                <span>Emergency Desk: {hospitalInfo.emergencyPhone}</span>
-              </div>
-            </div>
-
-            {/* Social Media Links */}
-            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
-              {hospitalInfo.socialLinks.facebook && (
-                <a 
-                  href={hospitalInfo.socialLinks.facebook} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  style={{ color: '#94a3b8', padding: '7px', borderRadius: '50%', background: '#0f2942', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                  aria-label="IndoStates Hospital Facebook"
-                >
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                </a>
-              )}
-              {hospitalInfo.socialLinks.instagram && (
-                <a 
-                  href={hospitalInfo.socialLinks.instagram} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  style={{ color: '#94a3b8', padding: '7px', borderRadius: '50%', background: '#0f2942', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                  aria-label="IndoStates Hospital Instagram"
-                >
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-                </a>
-              )}
-              {hospitalInfo.socialLinks.linkedin && (
-                <a 
-                  href={hospitalInfo.socialLinks.linkedin} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  style={{ color: '#94a3b8', padding: '7px', borderRadius: '50%', background: '#0f2942', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                  aria-label="IndoStates Hospital LinkedIn"
-                >
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
-                </a>
-              )}
-              {hospitalInfo.socialLinks.youtube && (
-                <a 
-                  href={hospitalInfo.socialLinks.youtube} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  style={{ color: '#94a3b8', padding: '7px', borderRadius: '50%', background: '#0f2942', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                  aria-label="IndoStates Hospital YouTube"
-                >
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-                </a>
-              )}
             </div>
           </div>
 
           {/* Column 2: Quick Links */}
-          <div>
-            <h4 className="footer-heading">Quick Links</h4>
-            <ul className="footer-links">
-              <li><Link to="/about">About IndoStates</Link></li>
-              <li><Link to="/departments">Clinical Departments</Link></li>
-              <li><Link to="/doctors">Find a Doctor</Link></li>
-              <li><Link to="/services">Healthcare Services</Link></li>
-              <li><Link to="/facilities">Hospital Facilities</Link></li>
-              <li><Link to="/health-packages">Health Checkup Packages</Link></li>
-              <li><Link to="/gallery">Campus & Facility Gallery</Link></li>
-              <li><Link to="/careers">Careers & Openings</Link></li>
-              <li><Link to="/testimonials">Patient Experiences</Link></li>
+          <div className="space-y-4">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-white">
+              Patient Care & Diagnostics
+            </h3>
+            <ul className="space-y-2 text-sm text-slate-400">
+              <li>
+                <Link href="/health-packages" className="hover:text-cyan-400 transition-colors flex items-center justify-between">
+                  <span>Master Health Checkup</span>
+                  <span className="text-[10px] bg-emerald-900/60 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-700/50">
+                    ₹3,500
+                  </span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/preventive-health" className="hover:text-cyan-400 transition-colors">
+                  Preventive Health (10 Pillars)
+                </Link>
+              </li>
+              <li>
+                <Link href="/diagnostic-center/mri" className="hover:text-cyan-400 transition-colors">
+                  1.5 Tesla MRI Services
+                </Link>
+              </li>
+              <li>
+                <Link href="/diagnostic-center/ct" className="hover:text-cyan-400 transition-colors">
+                  128-Slice CT & Calcium Score
+                </Link>
+              </li>
+              <li>
+                <Link href="/diagnostic-center/dexa" className="hover:text-cyan-400 transition-colors">
+                  DEXA Bone Density Scan (BMD)
+                </Link>
+              </li>
+              <li>
+                <Link href="/diagnostic-center/mammography" className="hover:text-cyan-400 transition-colors">
+                  3D Digital Mammography
+                </Link>
+              </li>
+              <li>
+                <Link href="/diagnostic-center/laboratory" className="hover:text-cyan-400 transition-colors">
+                  Pathology Lab & Free Home Sample
+                </Link>
+              </li>
+              <li>
+                <Link href="/facilities" className="hover:text-cyan-400 transition-colors">
+                  Hospital Facilities & Tech
+                </Link>
+              </li>
+              <li>
+                <Link href="/doctors" className="hover:text-cyan-400 transition-colors">
+                  Specialist Doctors Directory
+                </Link>
+              </li>
             </ul>
           </div>
 
-          {/* Column 3: Patient Care */}
-          <div>
-            <h4 className="footer-heading">Patient Care</h4>
-            <ul className="footer-links">
-              <li><Link to="/appointments">Book an Appointment</Link></li>
-              <li><Link to="/emergency">Emergency & Trauma 24x7</Link></li>
-              <li><Link to="/insurance">Insurance & Cashless Desk</Link></li>
-              <li><Link to="/diagnostics">Laboratory & Diagnostics</Link></li>
-              <li><Link to="/pharmacy">24x7 In-house Pharmacy</Link></li>
-              <li><Link to="/patient-resources">Patient & Visitor Guide</Link></li>
-              <li><Link to="/international-patients">International Patients</Link></li>
-              <li><Link to="/health">Health Articles & Updates</Link></li>
-              <li><Link to="/events">Health Camps & Events</Link></li>
+          {/* Column 3: Portals & Charitable Initiatives */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-white">
+              Portals & ARDOR Charity
+            </h3>
+            <ul className="space-y-2.5 text-sm text-slate-400">
+              <li>
+                <Link href="/portal/patient" className="hover:text-white transition-colors flex items-center gap-1.5">
+                  <span>Patient Dashboard</span>
+                  <span className="text-[10px] text-cyan-400 font-semibold">• Manage Passes</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/login?portal=doctor" className="hover:text-white transition-colors">
+                  Doctor Login &amp; Console
+                </Link>
+              </li>
+              <li>
+                <Link href="/login?portal=admin" className="hover:text-white transition-colors">
+                  Hospital Admin Login
+                </Link>
+              </li>
+              <li>
+                <a
+                  href="https://indo.provalan.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors flex items-center gap-1 text-slate-500 hover:text-slate-300"
+                >
+                  <span>Provalan EHR Portal (Legacy)</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </li>
             </ul>
+
+            <div className="pt-2 p-3.5 rounded-xl bg-slate-900 border border-slate-800">
+              <div className="flex items-center gap-2 text-white font-semibold text-xs mb-1">
+                <HeartHandshake className="w-4 h-4 text-rose-400" />
+                <span>ARDOR Care Foundation</span>
+              </div>
+              <p className="text-xs text-slate-400 leading-relaxed mb-2">
+                Non-profit charitable healthcare & educational aid. Donations tax-deductible under Section 12A & 80G in India and US 501(c)(3).
+              </p>
+              <Link href="/charity" className="text-xs text-cyan-400 hover:underline font-semibold">
+                Explore Charity Programs →
+              </Link>
+            </div>
           </div>
 
-          {/* Column 4: Contact & Location */}
-          <div>
-            <h4 className="footer-heading">Contact & Location</h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', fontSize: '0.88rem', color: '#cbd5e1' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.65rem' }}>
-                <MapPin size={18} color="#38bdf8" style={{ flexShrink: 0, marginTop: '2px' }} />
-                <span>
-                  {hospitalInfo.addressLine1},<br />
-                  {hospitalInfo.addressLine2},<br />
-                  {hospitalInfo.city} - {hospitalInfo.pincode}, {hospitalInfo.country}
+          {/* Column 4: Contact & Emergency Information */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-white">
+              Hospital Contact & Address
+            </h3>
+
+            <div className="space-y-3 text-xs text-slate-400">
+              <div className="flex items-start gap-2.5">
+                <MapPin className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+                <span className="leading-relaxed">
+                  {HOSPITAL_INFO.address}
+                  <br />
+                  <span className="text-slate-500">{HOSPITAL_INFO.landmark}</span>
                 </span>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                <PhoneCall size={17} color="#38bdf8" style={{ flexShrink: 0 }} />
-                <a 
-                  href={`tel:${hospitalInfo.generalPhone.replace(/\D/g, '') || '0000000000'}`}
-                  style={{ color: 'inherit', textDecoration: 'none' }}
-                >
-                  Board: {hospitalInfo.generalPhone}
+              <div className="flex items-center gap-2.5">
+                <Phone className="w-4 h-4 text-cyan-400 shrink-0" />
+                <a href={`tel:${HOSPITAL_INFO.primaryPhoneRaw}`} className="text-white font-semibold hover:underline">
+                  {HOSPITAL_INFO.primaryPhone}
                 </a>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                <ShieldAlert size={17} color="#f87171" style={{ flexShrink: 0 }} />
-                <a 
-                  href={`tel:${hospitalInfo.emergencyPhone.replace(/\D/g, '') || '0000000000'}`}
-                  style={{ color: 'inherit', textDecoration: 'none' }}
-                >
-                  Emergency: {hospitalInfo.emergencyPhone}
+              <div className="flex items-center gap-2.5">
+                <Mail className="w-4 h-4 text-cyan-400 shrink-0" />
+                <a href="mailto:contact@indostates.com" className="hover:text-white transition-colors">
+                  {HOSPITAL_INFO.emails.contact}
                 </a>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                <Mail size={17} color="#38bdf8" style={{ flexShrink: 0 }} />
-                <a 
-                  href={`mailto:${hospitalInfo.email}`}
-                  style={{ color: 'inherit', textDecoration: 'none' }}
-                >
-                  {hospitalInfo.email}
-                </a>
+              <div className="flex items-start gap-2.5">
+                <Clock className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <p>{HOSPITAL_INFO.hours.weekdays}</p>
+                  <p>{HOSPITAL_INFO.hours.weekends}</p>
+                </div>
               </div>
+            </div>
 
-              <div style={{ marginTop: '0.75rem' }}>
-                <a
-                  href={hospitalInfo.googleMapsDirectionsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-outline btn-sm"
-                  style={{ color: '#38bdf8', borderColor: '#38bdf8' }}
-                >
-                  <MapPin size={14} />
-                  <span>Get Driving Directions</span>
-                  <ExternalLink size={12} />
-                </a>
-              </div>
+            <div className="p-3 rounded-lg bg-red-950/40 border border-red-800/50">
+              <span className="text-[11px] font-bold text-red-400 uppercase tracking-wide block mb-1">
+                24/7 Emergency Helpline
+              </span>
+              <a href="tel:04222111000" className="text-base font-extrabold text-white hover:text-red-300">
+                0422-2111000
+              </a>
             </div>
           </div>
         </div>
 
-        {/* Institutional Demo Notice */}
-        <div 
-          style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.04)',
-            border: '1px dashed rgba(255, 255, 255, 0.15)',
-            borderRadius: 'var(--radius-md)',
-            padding: '0.75rem 1.25rem',
-            fontSize: '0.8rem',
-            color: '#94a3b8',
-            marginBottom: '2rem',
-            lineHeight: 1.5
-          }}
-        >
-          <strong style={{ color: '#fbbf24' }}>Notice to Hospital Management:</strong> This website preview utilizes structured placeholders and simulated demonstration data for doctors, timings, and contact numbers. Official clinical registries, hospital licenses, and accreditations must be verified and configured prior to production public launch.
-        </div>
+        {/* Bottom Bar */}
+        <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+          <p>© {new Date().getFullYear()} Indo States Health. All rights reserved.</p>
 
-        {/* Footer Bottom Bar */}
-        <div className="footer-bottom">
-          <div>
-            © {currentYear} IndoStates Hospital. All rights reserved.
-          </div>
-
-          <div className="footer-bottom-links">
-            <Link to="/privacy">Privacy Policy</Link>
-            <Link to="/terms">Terms & Conditions</Link>
-            <Link to="/cookies">Cookie Policy</Link>
-            <Link to="/medical-disclaimer">Medical Disclaimer</Link>
-            <Link to="/accessibility">Accessibility</Link>
+          <div className="flex flex-wrap items-center gap-6">
+            <Link href="/privacy-policy" className="hover:text-slate-300 transition-colors">
+              Privacy Policy
+            </Link>
+            <Link href="/terms" className="hover:text-slate-300 transition-colors">
+              Terms & Conditions
+            </Link>
+            <Link href="/accessibility" className="hover:text-slate-300 transition-colors">
+              Accessibility Statement
+            </Link>
+            <Link href="/faq" className="hover:text-slate-300 transition-colors">
+              FAQ
+            </Link>
+            <Link href="/find-us" className="hover:text-slate-300 transition-colors">
+              Directions & Campus
+            </Link>
           </div>
         </div>
       </div>

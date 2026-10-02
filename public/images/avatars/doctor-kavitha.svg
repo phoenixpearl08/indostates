@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-grad-kavitha" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0c4a6e" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+    <linearGradient id="coat-kavitha" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#f8fafc" />
+    </linearGradient>
+    <filter id="shadow-kavitha" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.25" />
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="400" height="400" rx="48" fill="url(#bg-grad-kavitha)" />
+  <circle cx="200" cy="200" r="160" fill="#38bdf8" opacity="0.1" />
+
+  <!-- Body & Doctor Attire -->
+  <g filter="url(#shadow-kavitha)">
+    <!-- Inner Silk Indigo Top -->
+    <path d="M150 250 L250 250 L240 370 L160 370 Z" fill="#4338ca" />
+    <path d="M180 250 L220 250 L200 280 Z" fill="#e0e7ff" />
+
+    <!-- White Radiologist Coat -->
+    <path d="M110 390 L110 315 C110 265 145 248 175 248 L200 325 L165 390 Z" fill="url(#coat-kavitha)" />
+    <path d="M290 390 L290 315 C290 265 255 248 225 248 L200 325 L235 390 Z" fill="url(#coat-kavitha)" />
+    <!-- Coat Shoulders -->
+    <path d="M75 390 C75 305 115 260 160 250 L140 390 Z" fill="#e2e8f0" />
+    <path d="M325 390 C325 305 285 260 240 250 L260 390 Z" fill="#e2e8f0" />
+
+    <!-- Stethoscope -->
+    <path d="M148 260 C148 320 168 350 190 350" fill="none" stroke="#0284c7" stroke-width="7" stroke-linecap="round" />
+    <path d="M252 260 C252 320 232 350 210 350" fill="none" stroke="#0284c7" stroke-width="7" stroke-linecap="round" />
+    <circle cx="200" cy="355" r="13" fill="#38bdf8" stroke="#ffffff" stroke-width="3" />
+    <circle cx="200" cy="355" r="5" fill="#0f172a" />
+  </g>
+
+  <!-- Neck -->
+  <path d="M178 198 L222 198 L226 255 L174 255 Z" fill="#c47d4e" />
+
+  <!-- Head & Face -->
+  <ellipse cx="200" cy="172" rx="50" ry="60" fill="#d98956" />
+
+  <!-- Ears & Silver Studs -->
+  <circle cx="150" cy="172" r="11" fill="#c47d4e" />
+  <circle cx="250" cy="172" r="11" fill="#c47d4e" />
+  <circle cx="150" cy="178" r="3" fill="#38bdf8" />
+  <circle cx="250" cy="178" r="3" fill="#38bdf8" />
+
+  <!-- Professional Hair (Neat shoulder-length hair) -->
+  <path d="M142 165 C138 115 165 95 200 95 C235 95 262 115 258 165 C264 210 252 245 245 250 C240 220 242 190 242 170 C242 125 225 110 200 110 C175 110 158 125 158 170 C158 190 160 220 155 250 C148 245 136 210 142 165 Z" fill="#0f172a" />
+  <ellipse cx="200" cy="98" rx="35" ry="12" fill="#1e293b" />
+
+  <!-- Eyebrows -->
+  <path d="M167 150 Q180 144 192 149" fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round" />
+  <path d="M208 149 Q220 144 233 150" fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round" />
+
+  <!-- Eyes & Diagnostic Glasses -->
+  <circle cx="180" cy="162" r="4.5" fill="#0f172a" />
+  <circle cx="220" cy="162" r="4.5" fill="#0f172a" />
+  <circle cx="182" cy="160" r="1.5" fill="#ffffff" />
+  <circle cx="222" cy="160" r="1.5" fill="#ffffff" />
+
+  <!-- Modern Teal Glasses -->
+  <rect x="162" y="150" width="32" height="23" rx="6" fill="none" stroke="#0284c7" stroke-width="2.5" />
+  <rect x="206" y="150" width="32" height="23" rx="6" fill="none" stroke="#0284c7" stroke-width="2.5" />
+  <line x1="194" y1="160" x2="206" y2="160" stroke="#0284c7" stroke-width="2.5" />
+
+  <!-- Nose & Smile -->
+  <path d="M198 165 L198 180 Q200 183 203 180" fill="none" stroke="#a35b2e" stroke-width="2" stroke-linecap="round" />
+  <path d="M187 197 Q200 207 213 197" fill="none" stroke="#be185d" stroke-width="3" stroke-linecap="round" />
+
+  <!-- Radiology CT/MRI Beam Aperture Badge -->
+  <g transform="translate(130, 310)">
+    <rect width="36" height="42" rx="6" fill="#ffffff" stroke="#0284c7" stroke-width="2" />
+    <circle cx="18" cy="18" r="9" fill="none" stroke="#0284c7" stroke-width="3" stroke-dasharray="4 2" />
+    <circle cx="18" cy="18" r="3" fill="#0284c7" />
+    <rect x="12" y="32" width="12" height="2" fill="#7dd3fc" />
+  </g>
+
+  <!-- 1.5T MRI Lead Emblem -->
+  <g transform="translate(245, 310)">
+    <circle cx="16" cy="16" r="15" fill="#0284c7" stroke="#ffffff" stroke-width="2" />
+    <text x="16" y="20" font-family="system-ui, sans-serif" font-size="9" font-weight="900" fill="#ffffff" text-anchor="middle">MRI</text>
+  </g>
+</svg>

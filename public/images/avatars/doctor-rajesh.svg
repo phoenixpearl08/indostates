@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-grad-rajesh" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#083344" />
+      <stop offset="100%" stop-color="#0e7490" />
+    </linearGradient>
+    <linearGradient id="coat-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#f1f5f9" />
+    </linearGradient>
+    <linearGradient id="skin-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#d97706" />
+      <stop offset="100%" stop-color="#b45309" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.25" />
+    </filter>
+  </defs>
+
+  <!-- Background Circle with Soft Medical Glow -->
+  <rect width="400" height="400" rx="48" fill="url(#bg-grad-rajesh)" />
+  <circle cx="200" cy="200" r="160" fill="#06b6d4" opacity="0.12" />
+  <circle cx="200" cy="180" r="120" fill="#38bdf8" opacity="0.08" />
+
+  <!-- Base Body / Shoulders with White Clinical Coat -->
+  <g filter="url(#shadow)">
+    <!-- Inner Shirt & Tie -->
+    <path d="M150 250 L250 250 L240 370 L160 370 Z" fill="#0284c7" />
+    <!-- Navy Silk Tie -->
+    <polygon points="192,250 208,250 204,330 200,345 196,330" fill="#0f172a" />
+    <polygon points="190,250 210,250 206,265 194,265" fill="#1e293b" />
+
+    <!-- Lab Coat - Left & Right Lapels -->
+    <path d="M110 390 L110 320 C110 270 145 250 175 250 L200 330 L165 390 Z" fill="url(#coat-grad)" />
+    <path d="M290 390 L290 320 C290 270 255 250 225 250 L200 330 L235 390 Z" fill="url(#coat-grad)" />
+    <!-- Coat Shoulders & Sleeves -->
+    <path d="M70 390 C70 300 110 260 160 250 L140 390 Z" fill="#e2e8f0" />
+    <path d="M330 390 C330 300 290 260 240 250 L260 390 Z" fill="#e2e8f0" />
+
+    <!-- Specialist Stethoscope -->
+    <path d="M145 260 C145 320 165 350 190 350" fill="none" stroke="#0f172a" stroke-width="8" stroke-linecap="round" />
+    <path d="M255 260 C255 320 235 350 210 350" fill="none" stroke="#0f172a" stroke-width="8" stroke-linecap="round" />
+    <circle cx="200" cy="355" r="14" fill="#06b6d4" stroke="#0f172a" stroke-width="4" />
+    <circle cx="200" cy="355" r="6" fill="#ffffff" />
+  </g>
+
+  <!-- Neck -->
+  <path d="M175 200 L225 200 L230 260 L170 260 Z" fill="#c27847" />
+  <path d="M170 240 C190 255 210 255 230 240 L230 260 L170 260 Z" fill="#a35b2e" opacity="0.4" />
+
+  <!-- Head & Face -->
+  <ellipse cx="200" cy="175" rx="55" ry="65" fill="#d88d5e" />
+
+  <!-- Ears -->
+  <circle cx="145" cy="175" r="14" fill="#c27847" />
+  <circle cx="255" cy="175" r="14" fill="#c27847" />
+
+  <!-- Mature Professional Hair (Dark Slate with Distinguished Greying Highlights) -->
+  <path d="M145 160 C140 120 165 100 200 100 C235 100 260 120 255 160 C250 130 235 115 200 115 C165 115 150 130 145 160 Z" fill="#1e293b" />
+  <path d="M148 140 C155 125 175 110 205 110 C230 110 248 120 252 135 C240 122 225 118 200 118 C175 118 160 124 148 140 Z" fill="#64748b" opacity="0.6" />
+
+  <!-- Eyebrows -->
+  <path d="M165 152 Q180 148 190 152" fill="none" stroke="#0f172a" stroke-width="3.5" stroke-linecap="round" />
+  <path d="M210 152 Q220 148 235 152" fill="none" stroke="#0f172a" stroke-width="3.5" stroke-linecap="round" />
+
+  <!-- Eyes & Visionary Glasses -->
+  <circle cx="178" cy="165" r="5" fill="#0f172a" />
+  <circle cx="222" cy="165" r="5" fill="#0f172a" />
+  <circle cx="180" cy="163" r="1.5" fill="#ffffff" />
+  <circle cx="224" cy="163" r="1.5" fill="#ffffff" />
+
+  <!-- Modern Titanium Glasses (Neuroradiologist Focus) -->
+  <rect x="160" y="152" width="34" height="24" rx="7" fill="none" stroke="#0284c7" stroke-width="3" />
+  <rect x="206" y="152" width="34" height="24" rx="7" fill="none" stroke="#0284c7" stroke-width="3" />
+  <line x1="194" y1="162" x2="206" y2="162" stroke="#0284c7" stroke-width="3" />
+  <line x1="145" y1="160" x2="160" y2="162" stroke="#0284c7" stroke-width="2.5" />
+  <line x1="240" y1="162" x2="255" y2="160" stroke="#0284c7" stroke-width="2.5" />
+
+  <!-- Nose & Smile -->
+  <path d="M197 168 L197 185 Q200 188 204 185" fill="none" stroke="#a35b2e" stroke-width="2.5" stroke-linecap="round" />
+  <path d="M185 204 Q200 215 215 204" fill="none" stroke="#883c17" stroke-width="3" stroke-linecap="round" />
+
+  <!-- Specialist Neurovascular Badge (Brain / Cerebrovascular Symbol) -->
+  <g transform="translate(130, 310)">
+    <rect width="36" height="42" rx="6" fill="#0f172a" stroke="#06b6d4" stroke-width="2" />
+    <path d="M18 10 C14 10 11 13 11 17 C11 21 14 24 18 27 C22 24 25 21 25 17 C25 13 22 10 18 10 Z" fill="#06b6d4" />
+    <circle cx="18" cy="17" r="3" fill="#ffffff" />
+    <rect x="14" y="32" width="8" height="2" fill="#38bdf8" />
+  </g>
+
+  <!-- Dual Board Accreditation Pin (USA & India) -->
+  <g transform="translate(245, 310)">
+    <circle cx="16" cy="16" r="15" fill="#f59e0b" stroke="#ffffff" stroke-width="2" />
+    <text x="16" y="20" font-family="system-ui, sans-serif" font-size="10" font-weight="900" fill="#78350f" text-anchor="middle">USA</text>
+  </g>
+</svg>

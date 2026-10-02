@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-grad-viji" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e1b4b" />
+      <stop offset="100%" stop-color="#0e7490" />
+    </linearGradient>
+    <linearGradient id="sari-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0891b2" />
+      <stop offset="100%" stop-color="#0e7490" />
+    </linearGradient>
+  </defs>
+
+  <rect width="400" height="400" rx="48" fill="url(#bg-grad-viji)" />
+  <circle cx="200" cy="200" r="160" fill="#06b6d4" opacity="0.08" />
+
+  <g>
+    <!-- Elegant Executive Saree / Attire -->
+    <path d="M140 250 L260 250 L250 370 L150 370 Z" fill="#0369a1" />
+    <!-- Pallu Drape -->
+    <path d="M110 390 L110 310 C110 260 145 245 175 245 L240 390 Z" fill="url(#sari-grad)" />
+    <path d="M165 245 L240 390 L270 390 L195 245 Z" fill="#0284c7" />
+    <!-- Gold Border on Saree Pallu -->
+    <path d="M175 245 L240 390" stroke="#f59e0b" stroke-width="4" />
+
+    <!-- Shoulders -->
+    <path d="M75 390 C75 305 115 260 160 250 L140 390 Z" fill="#0e7490" />
+    <path d="M325 390 C325 305 285 260 240 250 L260 390 Z" fill="#075985" />
+  </g>
+
+  <!-- Neck -->
+  <path d="M178 198 L222 198 L226 255 L174 255 Z" fill="#c47d4e" />
+  <ellipse cx="200" cy="172" rx="50" ry="60" fill="#d98956" />
+
+  <!-- Ears & Gold Earrings -->
+  <circle cx="150" cy="172" r="11" fill="#c47d4e" />
+  <circle cx="250" cy="172" r="11" fill="#c47d4e" />
+  <circle cx="150" cy="178" r="4" fill="#fbbf24" stroke="#d97706" stroke-width="1" />
+  <circle cx="250" cy="178" r="4" fill="#fbbf24" stroke="#d97706" stroke-width="1" />
+
+  <!-- Professional Elegant Hair -->
+  <path d="M142 165 C138 115 165 95 200 95 C235 95 262 115 258 165 C264 210 252 245 245 250 C240 220 242 190 242 170 C242 125 225 110 200 110 C175 110 158 125 158 170 C158 190 160 220 155 250 C148 245 136 210 142 165 Z" fill="#0f172a" />
+  <ellipse cx="200" cy="98" rx="35" ry="12" fill="#1e293b" />
+
+  <!-- Eyebrows -->
+  <path d="M167 150 Q180 144 192 149" fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round" />
+  <path d="M208 149 Q220 144 233 150" fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round" />
+
+  <!-- Eyes -->
+  <circle cx="180" cy="162" r="4.5" fill="#0f172a" />
+  <circle cx="220" cy="162" r="4.5" fill="#0f172a" />
+  <circle cx="182" cy="160" r="1.5" fill="#ffffff" />
+  <circle cx="222" cy="160" r="1.5" fill="#ffffff" />
+
+  <!-- Traditional Red Bindi -->
+  <circle cx="200" cy="148" r="2.5" fill="#dc2626" />
+
+  <!-- Nose & Gracious Smile -->
+  <path d="M198 165 L198 180 Q200 183 203 180" fill="none" stroke="#a35b2e" stroke-width="2" stroke-linecap="round" />
+  <path d="M187 197 Q200 207 213 197" fill="none" stroke="#be185d" stroke-width="3" stroke-linecap="round" />
+
+  <!-- Managing Director Gold Badge -->
+  <g transform="translate(135, 290)">
+    <circle cx="10" cy="10" r="9" fill="#f59e0b" stroke="#ffffff" stroke-width="1.5" />
+    <polygon points="10,3 12,8 17,8 13,11 15,16 10,13 5,16 7,11 3,8 8,8" fill="#ffffff" />
+  </g>
+</svg>

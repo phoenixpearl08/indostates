@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-grad-mohan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#042f2e" />
+      <stop offset="100%" stop-color="#115e59" />
+    </linearGradient>
+    <linearGradient id="scrubs-mohan" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0d9488" />
+      <stop offset="100%" stop-color="#134e4a" />
+    </linearGradient>
+    <filter id="shadow-mohan" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.3" />
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="400" height="400" rx="48" fill="url(#bg-grad-mohan)" />
+  <circle cx="200" cy="200" r="160" fill="#2dd4bf" opacity="0.08" />
+
+  <!-- Body & Surgical Scrubs -->
+  <g filter="url(#shadow-mohan)">
+    <!-- Surgical Scrubs -->
+    <path d="M120 390 L120 295 C120 255 155 245 180 245 L200 300 L220 245 C245 245 280 255 280 295 L280 390 Z" fill="url(#scrubs-mohan)" />
+    <!-- V-Neck Trim -->
+    <polygon points="180,245 220,245 200,285" fill="#042f2e" />
+    <path d="M165 245 L200 300 L235 245" fill="none" stroke="#2dd4bf" stroke-width="4" stroke-linecap="round" />
+    <!-- Shoulders -->
+    <path d="M70 390 C70 300 115 260 160 250 L140 390 Z" fill="#115e59" />
+    <path d="M330 390 C330 300 285 260 240 250 L260 390 Z" fill="#115e59" />
+
+    <!-- Stethoscope -->
+    <path d="M145 255 C145 320 165 350 190 350" fill="none" stroke="#042f2e" stroke-width="7" stroke-linecap="round" />
+    <path d="M255 255 C255 320 235 350 210 350" fill="none" stroke="#042f2e" stroke-width="7" stroke-linecap="round" />
+    <circle cx="200" cy="355" r="13" fill="#2dd4bf" stroke="#ffffff" stroke-width="3" />
+    <circle cx="200" cy="355" r="5" fill="#ffffff" />
+  </g>
+
+  <!-- Neck -->
+  <path d="M175 195 L225 195 L230 255 L170 255 Z" fill="#c47d4e" />
+
+  <!-- Head & Face -->
+  <ellipse cx="200" cy="172" rx="54" ry="63" fill="#d98956" />
+
+  <!-- Ears -->
+  <circle cx="146" cy="172" r="13" fill="#c47d4e" />
+  <circle cx="254" cy="172" r="13" fill="#c47d4e" />
+
+  <!-- Surgical Cap (Teal green surgical headwear) -->
+  <path d="M142 165 C140 100 165 85 200 85 C235 85 260 100 258 165 C250 148 230 145 200 145 C170 145 150 148 142 165 Z" fill="#0f766e" />
+  <path d="M140 155 Q200 145 260 155" fill="none" stroke="#14b8a6" stroke-width="4" />
+  <circle cx="200" cy="115" r="4" fill="#5eead4" opacity="0.6" />
+
+  <!-- Distinguished Eyebrows -->
+  <path d="M165 152 Q180 148 190 152" fill="none" stroke="#1e293b" stroke-width="3.5" stroke-linecap="round" />
+  <path d="M210 152 Q220 148 235 152" fill="none" stroke="#1e293b" stroke-width="3.5" stroke-linecap="round" />
+
+  <!-- Experienced Eyes -->
+  <circle cx="178" cy="163" r="5" fill="#0f172a" />
+  <circle cx="222" cy="163" r="5" fill="#0f172a" />
+  <circle cx="180" cy="161" r="1.5" fill="#ffffff" />
+  <circle cx="224" cy="161" r="1.5" fill="#ffffff" />
+
+  <!-- Nose & Smile with Mustache -->
+  <path d="M197 166 L197 183 Q200 186 204 183" fill="none" stroke="#a35b2e" stroke-width="2.5" stroke-linecap="round" />
+  <!-- Mature Neatly Groomed Mustache -->
+  <path d="M178 195 Q200 190 222 195 Q200 203 178 195 Z" fill="#334155" />
+  <path d="M188 206 Q200 212 212 206" fill="none" stroke="#7c2d12" stroke-width="2.5" stroke-linecap="round" />
+
+  <!-- Surgical Scalpel / Shield Badge -->
+  <g transform="translate(130, 310)">
+    <rect width="36" height="42" rx="6" fill="#ffffff" stroke="#0d9488" stroke-width="2" />
+    <path d="M18 10 L25 18 L18 28 L11 18 Z" fill="#0d9488" />
+    <circle cx="18" cy="18" r="3" fill="#ffffff" />
+    <rect x="12" y="32" width="12" height="2" fill="#5eead4" />
+  </g>
+
+  <!-- Veteran 28+ Yrs Service Emblem -->
+  <g transform="translate(245, 310)">
+    <circle cx="16" cy="16" r="15" fill="#f59e0b" stroke="#ffffff" stroke-width="2" />
+    <text x="16" y="20" font-family="system-ui, sans-serif" font-size="9" font-weight="900" fill="#78350f" text-anchor="middle">28Y</text>
+  </g>
+</svg>

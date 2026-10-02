@@ -1,35 +1,34 @@
 {
-  "name": "indostates-demo-1",
+  "name": "indostates-health",
+  "version": "1.0.0",
   "private": true,
-  "version": "0.0.0",
-  "type": "module",
   "scripts": {
-    "dev": "vite",
-    "dev:backend": "npm --prefix backend run dev",
-    "build": "tsc -b && vite build",
-    "build:backend": "npm --prefix backend run build",
-    "test:backend": "npm --prefix backend run test",
-    "test:rbac": "npm --prefix backend run test:rbac",
-    "prisma:generate": "npm --prefix backend run prisma:generate",
-    "prisma:seed": "npm --prefix backend run prisma:seed",
-    "lint": "oxlint",
-    "preview": "vite preview"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   },
   "dependencies": {
-    "@prisma/client": "^6.19.3",
-    "lucide-react": "^1.48.0",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8",
-    "react-router-dom": "^7.18.4"
+    "@google/genai": "^2.27.0",
+    "@supabase/supabase-js": "^2.117.2",
+    "canvas-confetti": "^1.9.4",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.453.0",
+    "next": "^14.2.15",
+    "qrcode": "^1.5.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwind-merge": "^2.5.4"
   },
   "devDependencies": {
-    "@types/node": "^24.13.3",
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.7",
-    "@vitejs/plugin-react": "^6.1.1",
-    "oxlint": "^1.81.0",
-    "prisma": "^6.19.3",
-    "typescript": "~6.0.2",
-    "vite": "^8.3.0"
+    "@types/canvas-confetti": "^1.9.0",
+    "@types/node": "^20.17.0",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.1",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.14",
+    "typescript": "^5.6.3"
   }
 }

@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-grad-logesh" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1e293b" />
+    </linearGradient>
+    <linearGradient id="scrubs-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0891b2" />
+      <stop offset="100%" stop-color="#0e7490" />
+    </linearGradient>
+    <filter id="shadow-logesh" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.3" />
+    </filter>
+  </defs>
+
+  <!-- Background Card -->
+  <rect width="400" height="400" rx="48" fill="url(#bg-grad-logesh)" />
+  <circle cx="200" cy="200" r="160" fill="#0284c7" opacity="0.1" />
+
+  <!-- Body / Emergency Scrubs -->
+  <g filter="url(#shadow-logesh)">
+    <!-- Scrub V-Neck Base -->
+    <path d="M120 390 L120 290 C120 255 155 245 180 245 L200 300 L220 245 C245 245 280 255 280 290 L280 390 Z" fill="url(#scrubs-grad)" />
+    <!-- Inner Scrub Undershirt -->
+    <polygon points="180,245 220,245 200,290" fill="#0f172a" />
+    <!-- V-Neck Scrub Trim -->
+    <path d="M165 245 L200 300 L235 245" fill="none" stroke="#06b6d4" stroke-width="4" stroke-linecap="round" />
+    <!-- Shoulders -->
+    <path d="M70 390 C70 300 115 260 160 250 L140 390 Z" fill="#0e7490" />
+    <path d="M330 390 C330 300 285 260 240 250 L260 390 Z" fill="#0e7490" />
+
+    <!-- Emergency Stethoscope around Neck -->
+    <path d="M145 255 C145 320 165 350 190 350" fill="none" stroke="#e2e8f0" stroke-width="7" stroke-linecap="round" />
+    <path d="M255 255 C255 320 235 350 210 350" fill="none" stroke="#e2e8f0" stroke-width="7" stroke-linecap="round" />
+    <circle cx="200" cy="355" r="13" fill="#ef4444" stroke="#ffffff" stroke-width="3" />
+    <circle cx="200" cy="355" r="5" fill="#ffffff" />
+  </g>
+
+  <!-- Neck -->
+  <path d="M175 195 L225 195 L230 255 L170 255 Z" fill="#c47d4e" />
+
+  <!-- Head & Face -->
+  <ellipse cx="200" cy="170" rx="54" ry="63" fill="#d98956" />
+
+  <!-- Ears -->
+  <circle cx="146" cy="170" r="13" fill="#c47d4e" />
+  <circle cx="254" cy="170" r="13" fill="#c47d4e" />
+
+  <!-- Hair (Neat, modern dynamic cut) -->
+  <path d="M146 155 C142 110 170 95 200 95 C230 95 258 110 254 155 C248 120 235 110 200 110 C165 110 152 120 146 155 Z" fill="#0f172a" />
+  <path d="M152 130 C160 115 180 105 205 105 C230 105 245 115 250 130 Z" fill="#1e293b" />
+
+  <!-- Eyebrows -->
+  <path d="M165 150 Q180 145 190 150" fill="none" stroke="#0f172a" stroke-width="3.5" stroke-linecap="round" />
+  <path d="M210 150 Q220 145 235 150" fill="none" stroke="#0f172a" stroke-width="3.5" stroke-linecap="round" />
+
+  <!-- Eyes (Sharp, focused) -->
+  <circle cx="178" cy="162" r="5" fill="#0f172a" />
+  <circle cx="222" cy="162" r="5" fill="#0f172a" />
+  <circle cx="180" cy="160" r="1.5" fill="#ffffff" />
+  <circle cx="224" cy="160" r="1.5" fill="#ffffff" />
+
+  <!-- Nose & Confident Smile -->
+  <path d="M197 165 L197 182 Q200 185 204 182" fill="none" stroke="#a35b2e" stroke-width="2.5" stroke-linecap="round" />
+  <path d="M185 200 Q200 210 215 200" fill="none" stroke="#7c2d12" stroke-width="3" stroke-linecap="round" />
+
+  <!-- Emergency Red Cross Badge & ID -->
+  <g transform="translate(130, 310)">
+    <rect width="36" height="42" rx="6" fill="#ffffff" stroke="#ef4444" stroke-width="2" />
+    <!-- Red Cross -->
+    <rect x="15" y="10" width="6" height="18" rx="2" fill="#ef4444" />
+    <rect x="9" y="16" width="18" height="6" rx="2" fill="#ef4444" />
+    <rect x="11" y="32" width="14" height="2" fill="#94a3b8" />
+  </g>
+
+  <!-- Medical Director Star Emblem -->
+  <g transform="translate(245, 310)">
+    <circle cx="16" cy="16" r="15" fill="#0891b2" stroke="#ffffff" stroke-width="2" />
+    <polygon points="16,5 19,13 27,13 21,18 23,26 16,21 9,26 11,18 5,13 13,13" fill="#ffffff" />
+  </g>
+</svg>
