@@ -293,10 +293,13 @@ export async function POST(req: NextRequest) {
       try {
         const admin = getSupabaseAdmin();
         if (admin) {
+          const isValidUuid = (val?: string) =>
+            Boolean(val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val));
+
           await admin.from("appointments").insert({
             reference_code: referenceCode,
-            patient_id: newAppointment.patientId,
             verification_token: newAppointment.verificationToken,
+            patient_id: isValidUuid(newAppointment.patientId) ? newAppointment.patientId : null,
             patient_name: newAppointment.patientName,
             patient_phone: newAppointment.patientPhone,
             patient_email: newAppointment.patientEmail,
@@ -305,7 +308,7 @@ export async function POST(req: NextRequest) {
             service_type: newAppointment.serviceType,
             target_id: newAppointment.targetId,
             target_name: newAppointment.targetName,
-            doctor_id: newAppointment.doctorId,
+            doctor_id: newAppointment.doctorId || null,
             doctor_name: newAppointment.doctorName,
             appointment_date: newAppointment.date,
             time_slot: newAppointment.timeSlot,
@@ -364,10 +367,14 @@ export async function PATCH(req: NextRequest) {
       try {
         const admin = getSupabaseAdmin();
         if (admin) {
-          await admin
-            .from("appointments")
-            .update({ status, notes: target.notes })
-            .or(`id.eq.${id},reference_code.eq.${id}`);
+          const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+          let updateQuery = admin.from("appointments").update({ status, notes: target.notes });
+          if (isUuid) {
+            updateQuery = updateQuery.or(`id.eq.${id},reference_code.eq.${id}`);
+          } else {
+            updateQuery = updateQuery.eq("reference_code", id);
+          }
+          await updateQuery;
         }
       } catch (dbErr) {
         console.warn("Supabase PATCH status notice:", dbErr);

@@ -22,7 +22,7 @@ import {
 import { StoredAppointment } from "@/lib/store";
 import { HOSPITAL_INFO } from "@/data/hospitalData";
 import { formatDate } from "@/lib/utils";
-import { generateQRCodeDataUrl } from "@/lib/qrCode";
+import { generateQRCodeDataUrl, getAppointmentVerificationUrl } from "@/lib/qrCode";
 
 export interface DigitalPassProps {
   appointment: StoredAppointment;
@@ -41,10 +41,9 @@ export const DigitalPass: React.FC<DigitalPassProps> = ({
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && appointment) {
-      const origin = window.location.origin;
-      const targetId = appointment.id || appointment.referenceCode;
-      const url = `${origin}/booking/verify/${encodeURIComponent(targetId)}`;
+    if (appointment) {
+      const targetId = appointment.referenceCode || appointment.id;
+      const url = getAppointmentVerificationUrl(targetId);
       setVerificationUrl(url);
 
       // Generate dynamic QR code encoding canonical verification URL

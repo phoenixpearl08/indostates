@@ -47,11 +47,15 @@ export async function GET(req: NextRequest) {
       try {
         const admin = getSupabaseAdmin();
         if (admin) {
-          const { data, error } = await admin
-            .from("appointments")
-            .select("*")
-            .or(`id.eq.${queryKey},reference_code.eq.${queryKey}`)
-            .single();
+          const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(queryKey);
+          let dbQuery = admin.from("appointments").select("*");
+          if (isUuid) {
+            dbQuery = dbQuery.or(`id.eq.${queryKey},reference_code.eq.${queryKey},verification_token.eq.${queryKey}`);
+          } else {
+            dbQuery = dbQuery.or(`reference_code.eq.${queryKey},verification_token.eq.${queryKey}`);
+          }
+
+          const { data, error } = await dbQuery.limit(1).maybeSingle();
 
           if (!error && data) {
             const isCancelled = data.status === "cancelled";

@@ -7,6 +7,7 @@ import { HospitalStore, UserSession } from "@/lib/store";
 import { Lock, Mail, ShieldCheck, Stethoscope, Building2, AlertCircle, CheckCircle2, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabase";
+import { getAppBaseUrl } from "@/lib/qrCode";
 
 function LoginForm() {
   const router = useRouter();
@@ -100,10 +101,12 @@ function LoginForm() {
       const client = getSupabaseClient();
       if (client) {
         try {
+          const baseUrl = getAppBaseUrl();
+          const targetRedirect = redirectParam ? `${baseUrl}${redirectParam}` : `${baseUrl}/login`;
           const { error } = await client.auth.signInWithOAuth({
             provider: "google",
             options: {
-              redirectTo: `${window.location.origin}/login`,
+              redirectTo: targetRedirect,
             },
           });
           if (error) {

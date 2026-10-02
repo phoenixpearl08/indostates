@@ -191,16 +191,25 @@ export class IndoCareAIService {
       };
     }
 
-    // Query against ARDOR Charity
-    if (normalized.includes("charity") || normalized.includes("ardor") || normalized.includes("donation") || normalized.includes("poor") || normalized.includes("scholarship")) {
+    // Query against Operating Hours & Contact Details
+    if (
+      normalized.includes("timing") ||
+      normalized.includes("hours") ||
+      normalized.includes("open") ||
+      normalized.includes("phone") ||
+      normalized.includes("contact") ||
+      normalized.includes("hotline") ||
+      normalized.includes("reception")
+    ) {
       return {
         id: `msg-${Date.now()}`,
         sender: "assistant",
-        text: `**ARDOR Care Foundation (Non-Profit Wing):**\nIndo States Health founded the ARDOR Care Foundation to provide:\n• Subsidized medical treatment and life-saving interventions for underprivileged patients\n• Free community medical screening camps across rural Coimbatore\n• Educational aid and scholarships for deserving students\n• **Tax Deductibility:** Section 12A & 80G compliant in India, and 501(c)(3) tax-exempt in the USA (Ardor Corporation at ardoronline.com).`,
+        text: `**Indo States Health Operating Hours & Contacts:**\n\n🕒 **Hospital Timings:**\n• **Monday – Friday:** 9:00 AM – 5:00 PM\n• **Saturday – Sunday:** 10:00 AM – 6:00 PM\n• **24/7 Emergency & Acute Trauma:** Open around the clock 24/7\n\n📞 **24/7 Emergency Hotline:** **[0422-2111000](tel:+9104222111000)**\n📞 **Hospital Reception:** **[0422-2111000](tel:+9104222111000)**\n📧 **Email:** info@indostates.com\n\n📍 **Address:** ${HOSPITAL_INFO.address}`,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         suggestedActions: [
-          { label: "Learn About ARDOR Care Foundation", url: "/charity" },
-          { label: "Visit ardoronline.com", url: "https://ardoronline.com/" },
+          { label: "📞 Call 0422-2111000", url: "tel:+9104222111000" },
+          { label: "Book Appointment", url: "/book-appointment" },
+          { label: "View Campus Location", url: "/find-us" },
         ],
       };
     }
