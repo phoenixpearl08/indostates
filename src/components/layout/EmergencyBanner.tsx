@@ -17,10 +17,10 @@ export const EmergencyBanner: React.FC = () => {
             <AlertCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
           </span>
           <span className="font-semibold tracking-wide">
-            24/7 Acute Stroke &amp; Trauma Emergency:
+            24/7 Acute Stroke & Trauma Emergency:
           </span>
           <span className="hidden md:inline text-white/90">
-            Immediate 128-slice CT &amp; 1.5T MRI triage on standby
+            Immediate 128-slice CT & 1.5T MRI triage on standby
           </span>
         </div>
 

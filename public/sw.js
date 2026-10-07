@@ -77,10 +77,13 @@ self.addEventListener("fetch", (event) => {
         return cachedResponse;
       }
       return fetch(request).then((networkResponse) => {
-        // Cache successful responses for static assets only
+        // Cache successful responses for static assets only (never cache hot updates or dev chunks)
         if (
           networkResponse &&
           networkResponse.status === 200 &&
+          !url.pathname.includes("webpack") &&
+          !url.pathname.includes("hot-update") &&
+          !url.pathname.includes("/development/") &&
           (url.pathname.startsWith("/_next/static/") ||
             url.pathname.endsWith(".png") ||
             url.pathname.endsWith(".jpg") ||

@@ -26,11 +26,17 @@ export interface StoredAppointment {
   paymentStatus: "pay_on_arrival" | "paid_online";
 }
 
+import { UserRole } from "@/types/hms";
+
 export interface UserSession {
   id: string;
   name: string;
   email: string;
-  role: "patient" | "doctor" | "admin";
+  phone?: string;
+  role: UserRole | "patient" | "doctor" | "admin";
+  uhid?: string;
+  department?: string;
+  employee_id?: string;
   token?: string;
 }
 
@@ -48,8 +54,8 @@ export class HospitalStore {
   // 1. Language
   static getLanguage(): Language {
     if (typeof window === "undefined") return "en";
-    const saved = localStorage.getItem(STORAGE_KEYS.LANGUAGE);
-    if (saved === "ta" || saved === "hi") return saved;
+    const saved = localStorage.getItem(STORAGE_KEYS.LANGUAGE) as Language | null;
+    if (saved && ["en", "ta", "hi", "ml", "te", "kn"].includes(saved)) return saved;
     return "en";
   }
 
@@ -123,7 +129,45 @@ export class HospitalStore {
     if (typeof window === "undefined") return null;
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.USER_SESSION);
-      return saved ? JSON.parse(saved) : null;
+      if (saved) return JSON.parse(saved);
+
+      // Fallback: Reconstitute session from cookies if browser cleared localStorage
+      const cookies = document.cookie.split(";").reduce((acc, c) => {
+        const [k, v] = c.trim().split("=");
+        if (k && v) {
+          try {
+            acc[k] = decodeURIComponent(v);
+          } catch {
+            acc[k] = v;
+          }
+        }
+        return acc;
+      }, {} as Record<string, string>);
+
+      if (cookies["ish_auth_user"]) {
+        try {
+          const userObj = JSON.parse(cookies["ish_auth_user"]);
+          if (userObj && userObj.role) {
+            localStorage.setItem(STORAGE_KEYS.USER_SESSION, JSON.stringify(userObj));
+            return userObj;
+          }
+        } catch {}
+      }
+
+      if (cookies["ish_auth_role"]) {
+        const role = cookies["ish_auth_role"].toUpperCase();
+        const roleName = role === "DOCTOR" ? "Dr. Rajesh Rangaswamy" : role === "PATIENT" ? "Patient" : "Administrator";
+        const session: UserSession = {
+          id: `usr-${role.toLowerCase()}`,
+          name: roleName,
+          email: `${role.toLowerCase()}@indostates.com`,
+          role: role as any,
+        };
+        localStorage.setItem(STORAGE_KEYS.USER_SESSION, JSON.stringify(session));
+        return session;
+      }
+
+      return null;
     } catch {
       return null;
     }
@@ -133,10 +177,35 @@ export class HospitalStore {
     if (typeof window === "undefined") return;
     if (session) {
       localStorage.setItem(STORAGE_KEYS.USER_SESSION, JSON.stringify(session));
+      const maxAge = 60 * 60 * 24 * 7;
+      document.cookie = `ish_auth_role=${encodeURIComponent(session.role.toUpperCase())}; path=/; max-age=${maxAge}; SameSite=Lax`;
+      document.cookie = `ish_auth_user=${encodeURIComponent(JSON.stringify(session))}; path=/; max-age=${maxAge}; SameSite=Lax`;
     } else {
       localStorage.removeItem(STORAGE_KEYS.USER_SESSION);
+      document.cookie = "ish_auth_role=; path=/; max-age=0; SameSite=Lax";
+      document.cookie = "ish_auth_user=; path=/; max-age=0; SameSite=Lax";
+      try {
+        fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+      } catch {}
     }
     window.dispatchEvent(new Event("ish_session_change"));
+  }
+
+  static getCurrentSession(): UserSession | null {
+    return this.getSession();
+  }
+
+  static clearSession(): void {
+    this.setSession(null);
+  }
+
+  static async logout(): Promise<void> {
+    this.setSession(null);
+    if (typeof window !== "undefined") {
+      try {
+        await fetch("/api/auth/logout", { method: "POST" });
+      } catch {}
+    }
   }
 
   // 5. Dynamic Data Providers (with initial seed from hospitalData)

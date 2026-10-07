@@ -59,9 +59,9 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section>
-              <h2 className="text-base font-bold text-slate-900 mb-2">4. AI Interaction Privacy (IndoCare AI)</h2>
+              <h2 className="text-base font-bold text-slate-900 mb-2">4. AI Interaction Privacy (IndoStates Help Desk)</h2>
               <p>
-                Conversations with IndoCare AI are processed statelessly or with temporary session tokens. We do not store identifiable medical histories in AI prompt training sets. The AI engine is strictly informational and operates with strict guardrails against unauthorized data leakage.
+                Conversations with IndoStates Help Desk are processed statelessly or with temporary session tokens. We do not store identifiable medical histories in AI prompt training sets. The AI engine is strictly informational and operates with strict guardrails against unauthorized data leakage.
               </p>
             </section>
 

@@ -7,9 +7,11 @@ import { HospitalStore } from "@/lib/store";
 
 export const LanguageSelector: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
   const [currentLang, setCurrentLang] = useState<Language>("en");
+  const [isMounted, setIsMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
     setCurrentLang(HospitalStore.getLanguage());
 
     const handleLangChange = () => {
@@ -24,6 +26,9 @@ export const LanguageSelector: React.FC<{ compact?: boolean }> = ({ compact = fa
     { code: "en", label: "English", native: "English" },
     { code: "ta", label: "Tamil", native: "தமிழ்" },
     { code: "hi", label: "Hindi", native: "हिंदी" },
+    { code: "ml", label: "Malayalam", native: "മലയാളം" },
+    { code: "te", label: "Telugu", native: "తెలుగు" },
+    { code: "kn", label: "Kannada", native: "ಕನ್ನಡ" },
   ];
 
   const handleSelect = (code: Language) => {
@@ -31,7 +36,8 @@ export const LanguageSelector: React.FC<{ compact?: boolean }> = ({ compact = fa
     setIsOpen(false);
   };
 
-  const active = languages.find((l) => l.code === currentLang) || languages[0];
+  const activeLang = isMounted ? currentLang : "en";
+  const active = languages.find((l) => l.code === activeLang) || languages[0];
 
   return (
     <div className="relative inline-block text-left">

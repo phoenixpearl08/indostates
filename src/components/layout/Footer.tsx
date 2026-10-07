@@ -159,12 +159,12 @@ export const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link href="/login?portal=doctor" className="hover:text-white transition-colors">
-                  Doctor Login &amp; Console
+                <Link href="/staff/login" className="hover:text-white transition-colors">
+                  Doctor Login & Console
                 </Link>
               </li>
               <li>
-                <Link href="/login?portal=admin" className="hover:text-white transition-colors">
+                <Link href="/staff/login" className="hover:text-white transition-colors">
                   Hospital Admin Login
                 </Link>
               </li>
@@ -247,7 +247,7 @@ export const Footer: React.FC = () => {
 
         {/* Bottom Bar */}
         <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <p>© {new Date().getFullYear()} Indo States Health. All rights reserved.</p>
+          <p>© 2026 Indo States Health. All rights reserved.</p>
 
           <div className="flex flex-wrap items-center gap-6">
             <Link href="/privacy-policy" className="hover:text-slate-300 transition-colors">

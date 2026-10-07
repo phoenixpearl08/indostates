@@ -5,6 +5,7 @@ import { Eye, Type, Pause, RotateCcw } from "lucide-react";
 import { HospitalStore } from "@/lib/store";
 
 export const AccessibilityBar: React.FC = () => {
+  const [isMounted, setIsMounted] = useState(false);
   const [settings, setSettings] = useState({
     highContrast: false,
     largeFont: false,
@@ -12,6 +13,7 @@ export const AccessibilityBar: React.FC = () => {
   });
 
   useEffect(() => {
+    setIsMounted(true);
     const current = HospitalStore.getA11ySettings();
     setSettings(current);
     applyA11yClasses(current);
@@ -27,6 +29,7 @@ export const AccessibilityBar: React.FC = () => {
   }, []);
 
   const applyA11yClasses = (cfg: typeof settings) => {
+    if (typeof document === "undefined") return;
     const root = document.documentElement;
     if (cfg.highContrast) {
       root.classList.add("high-contrast");
@@ -51,13 +54,20 @@ export const AccessibilityBar: React.FC = () => {
     const next = { ...settings, [key]: !settings[key] };
     setSettings(next);
     HospitalStore.setA11ySettings(next);
+    applyA11yClasses(next);
   };
 
   const resetAll = () => {
     const def = { highContrast: false, largeFont: false, reducedMotion: false };
     setSettings(def);
     HospitalStore.setA11ySettings(def);
+    applyA11yClasses(def);
   };
+
+  // During SSR and initial client hydration, active settings are deterministic defaults
+  const activeSettings = isMounted
+    ? settings
+    : { highContrast: false, largeFont: false, reducedMotion: false };
 
   return (
     <div
@@ -72,9 +82,9 @@ export const AccessibilityBar: React.FC = () => {
           </span>
           <button
             onClick={() => toggleSetting("highContrast")}
-            aria-pressed={settings.highContrast}
+            aria-pressed={activeSettings.highContrast}
             className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors flex items-center gap-1.5 ${
-              settings.highContrast
+              activeSettings.highContrast
                 ? "bg-amber-400 text-slate-950 font-bold"
                 : "hover:bg-slate-800 text-slate-300 border border-slate-700/60"
             }`}
@@ -86,9 +96,9 @@ export const AccessibilityBar: React.FC = () => {
 
           <button
             onClick={() => toggleSetting("largeFont")}
-            aria-pressed={settings.largeFont}
+            aria-pressed={activeSettings.largeFont}
             className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors flex items-center gap-1.5 ${
-              settings.largeFont
+              activeSettings.largeFont
                 ? "bg-hospital-400 text-slate-950 font-bold"
                 : "hover:bg-slate-800 text-slate-300 border border-slate-700/60"
             }`}
@@ -100,9 +110,9 @@ export const AccessibilityBar: React.FC = () => {
 
           <button
             onClick={() => toggleSetting("reducedMotion")}
-            aria-pressed={settings.reducedMotion}
+            aria-pressed={activeSettings.reducedMotion}
             className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors flex items-center gap-1.5 ${
-              settings.reducedMotion
+              activeSettings.reducedMotion
                 ? "bg-emerald-400 text-slate-950 font-bold"
                 : "hover:bg-slate-800 text-slate-300 border border-slate-700/60"
             }`}
@@ -112,7 +122,7 @@ export const AccessibilityBar: React.FC = () => {
             <span>No Motion</span>
           </button>
 
-          {(settings.highContrast || settings.largeFont || settings.reducedMotion) && (
+          {isMounted && (settings.highContrast || settings.largeFont || settings.reducedMotion) && (
             <button
               onClick={resetAll}
               className="text-[11px] text-slate-400 hover:text-white underline ml-1 flex items-center gap-1"
@@ -125,7 +135,7 @@ export const AccessibilityBar: React.FC = () => {
         </div>
 
         <div className="hidden lg:flex items-center gap-3 text-[11px] text-slate-400 shrink-0">
-          <span>NABH &amp; WCAG 2.2 AA Aligned</span>
+          <span>NABH & WCAG 2.2 AA Aligned</span>
           <span>•</span>
           <a href="/accessibility" className="hover:text-white underline">
             A11y Statement

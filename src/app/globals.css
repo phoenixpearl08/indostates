@@ -197,3 +197,26 @@ button, a, input, select, textarea {
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
+/* =========================================================================
+   PUBLIC WEBSITE BALANCED LEFT-ORIENTED CONTAINER SYSTEM
+   Aligns header, hero, cards, and page content consistently slightly left of center
+   on desktop viewports while preserving responsive balance on tablet and mobile.
+   ========================================================================= */
+@media (min-width: 1280px) {
+  .public-site-wrapper .max-w-7xl.mx-auto,
+  .public-site-wrapper .max-w-6xl.mx-auto,
+  .public-site-wrapper .max-w-5xl.mx-auto {
+    margin-left: max(2rem, calc((100vw - 1280px) * 0.22)) !important;
+    margin-right: auto !important;
+  }
+}
+
+@media (min-width: 1536px) {
+  .public-site-wrapper .max-w-7xl.mx-auto,
+  .public-site-wrapper .max-w-6xl.mx-auto,
+  .public-site-wrapper .max-w-5xl.mx-auto {
+    margin-left: max(3.5rem, calc((100vw - 1440px) * 0.22)) !important;
+    margin-right: auto !important;
+  }
+}
+

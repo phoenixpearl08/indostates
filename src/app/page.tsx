@@ -28,6 +28,7 @@ import {
   Navigation,
   FileText,
   AlertCircle,
+  Search,
 } from "lucide-react";
 import {
   HOSPITAL_INFO,
@@ -69,10 +70,11 @@ export default function HomePage() {
             
             {/* Left Column: Headlines, Actions, and Aligned Statistics */}
             <div className="lg:col-span-7 flex flex-col justify-center space-y-6 text-center lg:text-left">
-              {/* Trust Badge */}
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-hospital-100/90 text-hospital-800 border border-hospital-200/80 text-xs font-semibold shadow-2xs self-center lg:self-start">
-                <Sparkles className="w-3.5 h-3.5 text-hospital-600 shrink-0" />
-                <span>US &amp; Indian Dual Board-Certified Clinical Leadership</span>
+              {/* Trust Badge & Core Motto */}
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-hospital-50 text-hospital-800 border border-hospital-200 text-xs font-bold shadow-2xs self-center lg:self-start">
+                <span className="font-extrabold tracking-wide uppercase text-hospital-700">INDOSTATES HEALTHCARE</span>
+                <span className="text-hospital-300">•</span>
+                <span className="text-cyan-700 font-bold">Prevent • Screen • Treat</span>
               </div>
 
               {/* Main Heading with Balanced Line Wrap */}
@@ -82,7 +84,7 @@ export default function HomePage() {
 
               {/* Sub-headline */}
               <p className="text-sm sm:text-base lg:text-lg text-slate-600 leading-relaxed max-w-xl mx-auto lg:mx-0">
-                Pioneering comprehensive neurovascular stroke interventions, high-precision 1.5 Tesla MRI, 128-slice low-dose CT scans, and proactive preventive screening in Arasur, Coimbatore.
+                Pioneering comprehensive neurovascular stroke interventions, high-precision 1.5 Tesla MRI, 128-slice low-dose CT, and proactive preventive health screenings in Arasur, Coimbatore.
               </p>
 
               {/* Action Buttons: Unified Heights, Consistent Borders, Balanced Layout */}
@@ -118,6 +120,25 @@ export default function HomePage() {
                   <PhoneCall className="w-4 h-4 text-red-600 shrink-0" />
                   <span>{HOSPITAL_INFO.emergencyPhone}</span>
                 </a>
+              </div>
+
+              {/* Integrated Hero Quick Search */}
+              <div className="max-w-xl mx-auto lg:mx-0 w-full pt-1">
+                <form action="/doctors" method="GET" className="relative flex items-center">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
+                  <input
+                    type="text"
+                    name="q"
+                    placeholder="Search doctors, clinical specialties, or tests..."
+                    className="w-full pl-10 pr-24 py-2.5 rounded-xl border border-slate-300 bg-white text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-hospital-500 focus:border-hospital-500 shadow-2xs"
+                  />
+                  <button
+                    type="submit"
+                    className="absolute right-1.5 px-3 py-1.5 rounded-lg bg-hospital-700 text-white font-bold text-xs hover:bg-hospital-800 transition"
+                  >
+                    Search
+                  </button>
+                </form>
               </div>
 
               {/* Statistics Grid: Fully Aligned to Left Content Column */}
@@ -813,13 +834,13 @@ export default function HomePage() {
                 <Bot className="w-5 h-5 text-teal-700" />
               </div>
               <h3 className="font-heading font-bold text-base text-slate-900">
-                IndoCare AI Assistant
+                IndoStates Help Desk
               </h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Ask questions in English, Tamil, or Hindi about doctors, schedules, packages, and emergency protocols.
+                Multilingual assistance in English, Tamil, Hindi, Malayalam, Telugu, and Kannada for doctor bookings, schedules, and hospital info.
               </p>
               <Link href="/assistant" className="text-xs font-bold text-teal-700 hover:underline inline-block pt-1">
-                Launch assistant →
+                Open Help Desk →
               </Link>
             </div>
 

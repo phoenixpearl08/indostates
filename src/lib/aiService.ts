@@ -1,4 +1,4 @@
-import { HOSPITAL_INFO, DOCTORS, DEPARTMENTS, HEALTH_PACKAGES, DIAGNOSTIC_MODALITIES, FAQS } from "@/data/hospitalData";
+import { HOSPITAL_INFO, DOCTORS, DEPARTMENTS, HEALTH_PACKAGES, DIAGNOSTIC_MODALITIES } from "@/data/hospitalData";
 import { Language } from "@/data/translations";
 
 export interface ChatMessage {
@@ -19,7 +19,6 @@ export interface AIChatMessage {
   isEmergencyAlert?: boolean;
 }
 
-
 // Emergency Keyword Triaging Pattern
 const EMERGENCY_KEYWORDS = [
   "chest pain",
@@ -35,63 +34,123 @@ const EMERGENCY_KEYWORDS = [
   "severe trauma",
   "accident",
   "ambulance",
-  "மார்பு வலி",
+  "மாரடைப்பு",
   "பக்கவாதம்",
   "சுவாசிக்க முடியவில்லை",
+  "அவசரம்",
+  "நெஞ்சு வலி",
   "सीना दर्द",
   "दौरा",
   "सांस नहीं आ रही",
+  "നെഞ്ചുവേദന",
+  "സ്ട്രോക്ക്",
+  "ഗുരുതര",
+  "ఛాతీ నొప్పి",
+  "స్ట్రోక్",
+  "గుండెపోటు",
+  "ಎದೆ ನೋವು",
+  "ಪಾರ್ಶ್ವವಾಯು",
 ];
+
+// Helper to detect language from query
+export function detectQueryLanguage(text: string): Language {
+  const t = text.toLowerCase();
+
+  // Tamil script or Tanglish
+  if (/[\u0B80-\u0BFF]/.test(text) || /\b(irukka|eppo|venum|epdi|nalaiku|maruthuvar|maruthuvamana|valikuthu|sollunga|pannalama)\b/i.test(t)) {
+    return "ta";
+  }
+
+  // Malayalam script or Manglish
+  if (/[\u0D00-\u0D7F]/.test(text) || /\b(undo|eppo|veanam|enganeya|naale|doctorano|aashupathri)\b/i.test(t)) {
+    return "ml";
+  }
+
+  // Telugu script or Telugu keywords
+  if (/[\u0C00-\u0C7F]/.test(text) || /\b(undha|eppudu|kaavali|ela|repu|dhaactaru|aaspatri)\b/i.test(t)) {
+    return "te";
+  }
+
+  // Kannada script or Kannada keywords
+  if (/[\u0C80-\u0CFF]/.test(text) || /\b(ideya|yaavaga|beku|hege|naale|vaidyaru|aaspatre)\b/i.test(t)) {
+    return "kn";
+  }
+
+  // Hindi script or Hinglish
+  if (/[\u0900-\u097F]/.test(text) || /\b(hai kya|kab|chahiye|kaise|kal|aspataal|dawa)\b/i.test(t)) {
+    return "hi";
+  }
+
+  return "en";
+}
 
 export class IndoCareAIService {
   static async processMessage(userQuery: string, lang: Language = "en"): Promise<ChatMessage> {
+    const detectedLang = detectQueryLanguage(userQuery);
+    const effectiveLang = detectedLang !== "en" ? detectedLang : lang;
     const normalized = userQuery.toLowerCase().trim();
 
     // 1. EMERGENCY TRIAGE GATEWAY
     const isEmergency = EMERGENCY_KEYWORDS.some((kw) => normalized.includes(kw));
     if (isEmergency) {
       const emergencyResponses: Record<Language, string> = {
-        en: `🚨 **IMMEDIATE EMERGENCY PROTOCOL:**\nIf you or a patient is experiencing acute chest pain, weakness on one side of the body, slurred speech, sudden loss of consciousness, or severe trauma, **DO NOT WAIT.**\n\n**Immediately contact Indo States Health Emergency Hotline:**\n📞 **[0422-2111000](tel:+9104222111000)**\n\nOur Code Stroke & Acute Trauma Team is on standby 24/7 at 10/77 - D Sengodagownden Pudur, Arasur, Coimbatore (NH 544).`,
-        ta: `🚨 **அவசர எச்சரிக்கை நெறிமுறை:**\nநீங்கள் அல்லது நோயாளி மார்பு வலி, பக்கவாதம், முகம் அல்லது கை பலவீனம், பேச்சு குழப்பம் அல்லது கடுமையான காயத்தை உணர்ந்தால், **தயவுசெய்து உடனடியாக அழைக்கவும்:**\n📞 **[0422-2111000](tel:+9104222111000)**\n\nஎங்கள் அவசர சிகிச்சை மற்றும் பக்கவாத மீட்புக் குழு அரசூர் மருத்துவமனையில் 24 மணி நேரமும் தயாராக உள்ளது.`,
-        hi: `🚨 **आपातकालीन प्रोटोकॉल:**\nयदि आप या कोई मरीज सीने में तेज दर्द, लकवा/स्ट्रोक के लक्षण, बोलने में कठिनाई या गंभीर आघात का सामना कर रहे हैं, तो तुरंत कॉल करें:\n📞 **[0422-2111000](tel:+9104222111000)**\n\nहमारी 24/7 आपातकालीन टीम अरासुर, कोयंबटूर में तत्काल सेवा के लिए उपलब्ध है।`,
+        en: `🚨 **IMMEDIATE EMERGENCY PROTOCOL:**\nIf you or a patient is experiencing acute chest pain, weakness on one side of the body, slurred speech, sudden loss of consciousness, or severe trauma, **DO NOT DELAY.**\n\n**Immediately contact Indo States Health 24/7 Hotline:**\n📞 **[0422-2111000](tel:+9104222111000)**\n\nOur Code Stroke & Acute Trauma Resuscitation Team is standing by 24/7 at Arasur, Coimbatore (NH 544).`,
+        ta: `🚨 **அவசர சிகிச்சை நெறிமுறை:**\nநோயாளிக்கு கடுமையான மார்பு வலி, பக்கவாதம், திடீர் மயக்கம் அல்லது கடுமையான காயம் ஏற்பட்டால், தயவுசெய்து தாமதிக்க வேண்டாம்.\n\n**உடனடியாக அழைக்கவும் 24/7 அவசர உதவி எண்:**\n📞 **[0422-2111000](tel:+9104222111000)**\n\nஎங்கள் அவசர சிகிச்சை மற்றும் பக்கவாத மீட்புக் குழு அரசூர் மருத்துவமனையில் 24 மணி நேரமும் தயாராக உள்ளது.`,
+        hi: `🚨 **आपातकालीन प्रोटोकॉल:**\nयदि मरीज सीने में तेज दर्द, स्ट्रोक, बोलने में कठिनाई या गंभीर चोट का सामना कर रहा है, तो तुरंत कॉल करें:\n📞 **[0422-2111000](tel:+9104222111000)**\n\nहमारी 24/7 आपातकालीन टीम अरासुर, कोयंबटूर में तत्काल सेवा के लिए उपलब्ध है।`,
+        ml: `🚨 **അടിയന്തിര എമർജൻസി പ്രോട്ടോക്കോൾ:**\nനെഞ്ചുവേദന, സ്ട്രോക്ക് ലക്ഷണങ്ങൾ, ശ്വാസതടസ്സം അല്ലെങ്കിൽ ഗുരുതരമായ അപകടങ്ങൾ ഉണ്ടായാൽ ഉടൻ വിളിക്കുക:\n📞 **[0422-2111000](tel:+9104222111000)**\n\nഇൻഡോ സ്റ്റേറ്റ്സ് ഹെൽത്ത് എമർജൻസി ടീം അരസൂർ, കോയമ്പത്തൂരിൽ 24 മണിക്കൂറും സജ്ജമാണ്.`,
+        te: `🚨 **అత్యవసర ఎమర్జెన్సీ ప్రోటోకాల్:**\nతీవ్రమైన ఛాతీ నొప్పి, పక్షవాతం లేదా శ్వాస తీసుకోవడంలో ఇబ్బంది ఉంటే వెంటనే కాల్ చేయండి:\n📞 **[0422-2111000](tel:+9104222111000)**\n\nఅరసూర్, కోయంబత్తూరు లో మా 24/7 ఎమర్జెన్సీ టీమ్ సిద్ధంగా ఉంది.`,
+        kn: `🚨 **ತುರ್ತು ಚಿಕಿತ್ಸಾ ಪ್ರೋಟೋಕಾಲ್:**\nಎದೆ ನೋವು, ಪಾರ್ಶ್ವವಾಯು ಅಥವಾ ತೀವ್ರ ಗಾಯಗಳ ತುರ್ತು ಸಂದರ್ಭದಲ್ಲಿ ತಕ್ಷಣ ಕರೆ ಮಾಡಿ:\n📞 **[0422-2111000](tel:+9104222111000)**\n\nಅರಸೂರು, ಕೊಯಮತ್ತೂರಿನಲ್ಲಿ ನಮ್ಮ 24/7 ತುರ್ತು ವೈದ್ಯಕೀಯ ತಂಡ ಸದಾ ಸಿದ್ಧವಿದೆ.`,
       };
 
       return {
         id: `msg-${Date.now()}`,
         sender: "assistant",
-        text: emergencyResponses[lang] || emergencyResponses.en,
+        text: emergencyResponses[effectiveLang] || emergencyResponses.en,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         isEmergencyAlert: true,
         suggestedActions: [
-          { label: "📞 Call Emergency: 0422-2111000", url: "tel:+9104222111000" },
-          { label: "📍 Get Directions (Google Maps)", url: "/find-us" },
+          { label: "📞 Call 24/7 Emergency: 0422-2111000", url: "tel:+9104222111000" },
+          { label: "📍 Get Directions (Arasur, NH 544)", url: "/find-us" },
         ],
       };
     }
 
-    // 2. RETRIEVAL GROUNDING SEARCH
-    // Query against verified doctors
-    const matchedDoctor = DOCTORS.find(
-      (d) =>
-        normalized.includes(d.name.toLowerCase()) ||
-        normalized.includes(d.specialization.toLowerCase()) ||
-        (normalized.includes("rajesh") && d.id.includes("rajesh"))
-    );
+    // 2. APPOINTMENT AVAILABILITY / SCHEDULE QUERY (e.g. "Tomorrow doctor appointment irukka?")
+    if (
+      normalized.includes("appointment") ||
+      normalized.includes("irukka") ||
+      normalized.includes("booking") ||
+      normalized.includes("slot") ||
+      normalized.includes("book") ||
+      normalized.includes("schedule") ||
+      normalized.includes("tomorrow") ||
+      normalized.includes("nalaiku") ||
+      normalized.includes("timing") ||
+      normalized.includes("hours")
+    ) {
+      const scheduleReplies: Record<Language, string> = {
+        en: `Yes, doctor appointments and diagnostic slots are available! Our outpatient consultations run **Monday to Friday from 9:00 AM to 5:00 PM** and **Saturday to Sunday from 10:00 AM to 6:00 PM** (Emergency is 24/7).\n\nYou can select your preferred specialist (such as Dr. Rajesh Rangaswamy for Neurovascular / Stroke or Dr. Logesh for Emergency & Acute Care) and instantly book with confirmed digital QR pass.`,
+        ta: `ஆம், மருத்துவ சந்திப்புகள் மற்றும் பரிசோதனை முன்பதிவு ஸ்லாட்டுகள் உள்ளன! புறநோயாளி ஆலோசனை நேரம் **திங்கள் முதல் வெள்ளி வரை காலை 9:00 மணி முதல் மாலை 5:00 மணி வரையிலும்**, **சனி-ஞாயிறுகளில் காலை 10:00 மணி முதல் மாலை 6:00 மணி வரையிலும்** செயல்படுகிறது (அவசர சிகிச்சை 24/7).\n\nநீங்கள் விரும்பும் மருத்துவரைத் தேர்ந்தெடுத்து டிஜிட்டல் பாஸுடன் உடனே முன்பதிவு செய்து கொள்ளலாம்.`,
+        hi: `हाँ, डॉक्टर अपॉइंटमेंट और जांच स्लॉट उपलब्ध हैं! ओपीडी का समय **सोमवार से शुक्रवार सुबह 9:00 बजे से शाम 5:00 बजे तक** और **शनिवार-रविवार सुबह 10:00 बजे से शाम 6:00 बजे तक** है (इमरजेंसी 24/7 चालू है)।\n\nआप अपनी पसंद के विशेषज्ञ को चुनकर तुरंत कन्फर्म डिजिटल पास के साथ अपॉइंटमेंट बुक कर सकते हैं।`,
+        ml: `അതെ, ഡോക്ടർ അപ്പോയിന്റ്മെന്റുകൾ ലഭ്യമാണ്! ഒപിഡി സമയം **തിങ്കൾ മുതൽ വെള്ളി വരെ രാവിലെ 9:00 മുതൽ വൈകുന്നേരം 5:00 വരെയും**, **ശനി-ഞായർ ദിവസങ്ങളിൽ രാവിലെ 10:00 മുതൽ വൈകുന്നേരം 6:00 വരെയും** ആണ് (അടിയന്തിര പരിചരണം 24/7 ലഭ്യമാണ്).\n\nതാങ്കൾക്ക് വിദഗ്ദ്ധ ഡോക്ടറെ തിരഞ്ഞെടുത്ത് തത്സമയം ബുക്ക് ചെയ്യാവുന്നതാണ്.`,
+        te: `అవును, డాక్టర్ అపాయింట్‌మెంట్లు అందుబాటులో ఉన్నాయి! ఓపీడీ వేళలు **సోమవారం నుండి శుక్రవారం ఉదయం 9:00 నుండి సాయంత్రం 5:00 వరకు**, **శని-ఆదివారాల్లో ఉదయం 10:00 నుండి సాయంత్రం 6:00 వరకు** (ఎమర్జెన్సీ 24/7 అందుబాటులో ఉంటుంది).\n\nమీరు మీకు నచ్చిన స్పెషలిస్ట్‌ను ఎంచుకుని వెంటనే డిజిటల్ పాస్‌తో బుక్ చేసుకోవచ్చు.`,
+        kn: `ಹೌದು, ವೈದ್ಯರ ಅಪಾಯಿಂಟ್ಮೆಂಟ್ ಲಭ್ಯವಿದೆ! ಒಪಿಡಿ ಸಮಯ **ಸೋಮವಾರದಿಂದ ಶುಕ್ರವಾರದವರೆಗೆ ಬೆಳಿಗ್ಗೆ 9:00 ರಿಂದ ಸಂಜೆ 5:00 ರವರೆಗೆ** ಮತ್ತು **ಶನಿ-ಭಾನುವಾರ ಬೆಳಿಗ್ಗೆ 10:00 ರಿಂದ ಸಂಜೆ 6:00 ರವರೆಗೆ** (ತುರ್ತು ಸೇವೆ 24/7 ಲಭ್ಯವಿದೆ).\n\nನೀವು ತಜ್ಞ ವೈದ್ಯರನ್ನು ಆಯ್ಕೆಮಾಡಿ ಡಿಜಿಟಲ್ ಪಾಸ್‌ನೊಂದಿಗೆ ತಕ್ಷಣ ಬುಕ್ ಮಾಡಬಹುದು.`,
+      };
 
-    if (matchedDoctor) {
       return {
         id: `msg-${Date.now()}`,
         sender: "assistant",
-        text: `**${matchedDoctor.name}**\n*${matchedDoctor.role}*\n\n**Qualifications:** ${matchedDoctor.qualifications}\n**Specialization:** ${matchedDoctor.specialization}\n**Consultation Days:** ${matchedDoctor.availableDays.join(", ")} (${matchedDoctor.timing})\n\n${matchedDoctor.biography}`,
+        text: scheduleReplies[effectiveLang] || scheduleReplies.en,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         suggestedActions: [
-          { label: `Book with ${matchedDoctor.name}`, url: `/book-appointment?doctor=${matchedDoctor.id}` },
-          { label: "View All Doctors", url: "/doctors" },
+          { label: "📅 Book Doctor Appointment Now", url: "/book-appointment" },
+          { label: "👨‍⚕️ View Specialists Directory", url: "/doctors" },
+          { label: "📞 Reception Desk: 0422-2111000", url: "tel:+9104222111000" },
         ],
       };
     }
 
-    // Query against Master Health Checkup & Packages
+    // 3. MASTER HEALTH CHECKUP & PREVENTIVE PACKAGES (₹3,500)
     if (
       normalized.includes("package") ||
       normalized.includes("master health") ||
@@ -99,181 +158,89 @@ export class IndoCareAIService {
       normalized.includes("check up") ||
       normalized.includes("3500") ||
       normalized.includes("price") ||
-      normalized.includes("cost")
+      normalized.includes("cost") ||
+      normalized.includes("kattanam")
     ) {
       const mhc = HEALTH_PACKAGES[0];
       return {
         id: `msg-${Date.now()}`,
         sender: "assistant",
-        text: `**${mhc.name} (Special All-in-One Preventive Package)**\n**Official Price:** **₹${mhc.price}** *(Discounted from ₹${mhc.originalPrice})*\n\n**Included in this package:**\n• **Complete Laboratory:** CBC, Blood Sugar, Lipid Profile, Liver Function (LFT), Kidney Function (KFT), Thyroid (TSH), Urine Routine\n• **Tumor Markers:** CA-125 (for women) / PSA (for men)\n• **Advanced Panels:** Bone Health, Electrolytes, Pancreas Profile, Iron Profile, Vitamin Levels\n• **Cardiac:** 12-Lead ECG & Cardiac Plaque Risk Assessment\n• **Clinical:** Full Physical Exam & Senior Physician Consultation\n• **Zero-Cost Bonus:** **Free Home Sample Collection** anywhere in Coimbatore.`,
+        text: `**${mhc.name} (Complete Preventive Screening)**\n**Special Hospital Fee:** **₹${mhc.price}** *(Full value ₹${mhc.originalPrice})*\n\n**Included investigations:**\n• **Comprehensive Laboratory:** CBC, Fasting Blood Sugar, HbA1c, Lipid Profile, Liver Function (LFT), Kidney Function (KFT), Thyroid (TSH), Urine Analysis\n• **Cardiovascular:** 12-Lead ECG & Coronary Risk Factor Review\n• **Radiology & Diagnostics:** Ultrasound Abdomen & Chest X-Ray\n• **Physician Consultation:** Full review with senior physician\n• **Home Sample Pickup:** **Free Home Blood Collection** included across Coimbatore.\n\n*Preparation:* 10 to 12 hours overnight fasting recommended.`,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         suggestedActions: [
-          { label: "Book Master Checkup (₹3,500)", url: "/book-appointment?package=master-health-checkup" },
-          { label: "Explore All Packages", url: "/health-packages" },
+          { label: "Book Master Health Checkup (₹3,500)", url: "/book-appointment?package=master-health-checkup" },
+          { label: "View All Preventive Health Packages", url: "/health-packages" },
         ],
       };
     }
 
-    // Query against Diagnostics (MRI, CT, DEXA, Mammography, Lab)
-    if (normalized.includes("mri") || normalized.includes("scan") || normalized.includes("1.5")) {
-      const mri = DIAGNOSTIC_MODALITIES.find((d) => d.slug === "mri")!;
+    // 4. DIAGNOSTIC SCANS (MRI, CT, DEXA, Mammography, Lab)
+    if (normalized.includes("mri") || normalized.includes("scan") || normalized.includes("ct") || normalized.includes("dexa") || normalized.includes("mammography")) {
       return {
         id: `msg-${Date.now()}`,
         sender: "assistant",
-        text: `**${mri.name} – ${mri.subtitle}**\n\n**Technology:** ${mri.specification}\n\nOur 1.5 Tesla MRI provides dedicated high-contrast soft tissue scans for the brain, spine, cranial nerves, joints, and vascular systems. We conduct contrast-enhanced studies for detailed vessel and tumor characterization under US dual board-certified neuroradiology oversight.`,
+        text: `**IndoStates Advanced Diagnostic Center Modalities:**\n\n• **1.5 Tesla Silent High-Field MRI:** Neurovascular MRA, stroke imaging, and spine scans.\n• **128-Slice Low-Dose CT:** Cardiac CT coronary angiography & calcium score.\n• **3D Digital Mammography:** High-definition early breast lesion detection with minimal radiation.\n• **DEXA Bone Mineral Densitometry:** Fast osteoporosis and fracture risk evaluation.\n• **Automated Central Pathology Lab:** Fast sample turnaround with free home collection.\n\nReports are released with verified pathologist signatures directly to your patient portal.`,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         suggestedActions: [
-          { label: "View MRI Services", url: "/diagnostic-center/mri" },
-          { label: "Book Scan Appointment", url: "/book-appointment?dept=diagnostic-imaging" },
+          { label: "1.5T MRI Details", url: "/diagnostic-center/mri" },
+          { label: "128-Slice CT Details", url: "/diagnostic-center/ct" },
+          { label: "Book Diagnostic Appointment", url: "/book-appointment" },
         ],
       };
     }
 
-    if (normalized.includes("ct") || normalized.includes("128") || normalized.includes("calcium")) {
-      const ct = DIAGNOSTIC_MODALITIES.find((d) => d.slug === "ct")!;
-      return {
-        id: `msg-${Date.now()}`,
-        sender: "assistant",
-        text: `**${ct.name} – ${ct.subtitle}**\n\n**Key Modalities:**\n• **Low Dose Chest CT** for early lung cancer detection\n• **Coronary Calcium Score (Agatston Score)** for silent heart attack screening\n• **CT Coronary Angiogram** (Non-invasive arterial check)\n• **CT Colonography** (Virtual colonoscopy)\n\nScans take only seconds with up to 80% reduced radiation compared to standard CTs.`,
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        suggestedActions: [
-          { label: "View CT Services", url: "/diagnostic-center/ct" },
-          { label: "Book CT / Calcium Score", url: "/book-appointment?dept=diagnostic-imaging" },
-        ],
-      };
-    }
-
-    if (normalized.includes("mammogram") || normalized.includes("breast") || normalized.includes("dexa") || normalized.includes("bone")) {
-      return {
-        id: `msg-${Date.now()}`,
-        sender: "assistant",
-        text: `**Women's Health & Bone Diagnostics:**\n• **3D Full-Field Digital Mammography:** High-definition breast cancer detection capable of spotting microcalcifications long before lumps appear.\n• **DEXA Bone Mineral Densitometry (BMD):** Precise measurement of bone density for osteoporosis and whole-body fat/muscle composition.\n\nAll procedures are guided by lady specialists in a comfortable, private environment.`,
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        suggestedActions: [
-          { label: "Women's Wellness Package", url: "/health-packages" },
-          { label: "Book Appointment", url: "/book-appointment" },
-        ],
-      };
-    }
-
-    // Query against Location / Address / Directions
-    if (
-      normalized.includes("where") ||
-      normalized.includes("location") ||
-      normalized.includes("address") ||
-      normalized.includes("directions") ||
-      normalized.includes("map") ||
-      normalized.includes("reach")
-    ) {
-      return {
-        id: `msg-${Date.now()}`,
-        sender: "assistant",
-        text: `**Indo States Health Location & Directions:**\n\n📍 **Address:**\n${HOSPITAL_INFO.address}\n*(Near A2B on the Salem-Kochi NH 544 Highway corridor)*\n\n🚗 **Travel Times:**\n• ~15 minutes from Coimbatore International Airport (CJB)\n• ~30 minutes from Coimbatore Junction Railway Station\n• Direct access with ample ground-level patient parking and barrier-free wheelchair access.`,
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        suggestedActions: [
-          { label: "View Campus Map & Driving Route", url: "/find-us" },
-          { label: "Call Reception: 0422-2111000", url: "tel:+9104222111000" },
-        ],
-      };
-    }
-
-    // Query against Booking Instructions
-    if (normalized.includes("book") || normalized.includes("appointment") || normalized.includes("register")) {
-      return {
-        id: `msg-${Date.now()}`,
-        sender: "assistant",
-        text: `**How to Book an Appointment in 4 Easy Steps:**\n\n1. Go to our **[Appointment Booking Engine](/book-appointment)**.\n2. Choose either a **Health Package** (e.g. Master Health Checkup) or a **Specialist Doctor**.\n3. Select your preferred date and time slot.\n4. Enter patient contact details to receive your **Instant Digital Appointment Pass & QR Code**.\n\n*Payment can be completed online or upon arrival at the hospital registration desk.*`,
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        suggestedActions: [
-          { label: "Start Booking Now", url: "/book-appointment" },
-          { label: "Check Available Doctors", url: "/doctors" },
-        ],
-      };
-    }
-
-    // Query against Operating Hours & Contact Details
-    if (
-      normalized.includes("timing") ||
-      normalized.includes("hours") ||
-      normalized.includes("open") ||
-      normalized.includes("phone") ||
-      normalized.includes("contact") ||
-      normalized.includes("hotline") ||
-      normalized.includes("reception")
-    ) {
-      return {
-        id: `msg-${Date.now()}`,
-        sender: "assistant",
-        text: `**Indo States Health Operating Hours & Contacts:**\n\n🕒 **Hospital Timings:**\n• **Monday – Friday:** 9:00 AM – 5:00 PM\n• **Saturday – Sunday:** 10:00 AM – 6:00 PM\n• **24/7 Emergency & Acute Trauma:** Open around the clock 24/7\n\n📞 **24/7 Emergency Hotline:** **[0422-2111000](tel:+9104222111000)**\n📞 **Hospital Reception:** **[0422-2111000](tel:+9104222111000)**\n📧 **Email:** info@indostates.com\n\n📍 **Address:** ${HOSPITAL_INFO.address}`,
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        suggestedActions: [
-          { label: "📞 Call 0422-2111000", url: "tel:+9104222111000" },
-          { label: "Book Appointment", url: "/book-appointment" },
-          { label: "View Campus Location", url: "/find-us" },
-        ],
-      };
-    }
-
-    // Matching general FAQ
-    const matchedFaq = FAQS.find(
-      (f) =>
-        normalized.includes(f.question.toLowerCase().slice(0, 15)) ||
-        normalized.split(" ").some((word) => word.length > 4 && f.question.toLowerCase().includes(word))
+    // 5. DOCTOR MATCHING QUERY
+    const matchedDoctor = DOCTORS.find(
+      (d) =>
+        normalized.includes(d.name.toLowerCase()) ||
+        normalized.includes(d.specialization.toLowerCase()) ||
+        (normalized.includes("rajesh") && d.id.includes("rajesh")) ||
+        (normalized.includes("logesh") && d.id.includes("logesh")) ||
+        (normalized.includes("vani") && d.id.includes("vani"))
     );
 
-    if (matchedFaq) {
+    if (matchedDoctor) {
+      const matchedDept = DEPARTMENTS.find((dept) => dept.id === matchedDoctor.departmentId);
+      const deptName = matchedDept ? matchedDept.name : matchedDoctor.specialization;
       return {
         id: `msg-${Date.now()}`,
         sender: "assistant",
-        text: `**${matchedFaq.question}**\n\n${matchedFaq.answer}`,
+        text: `**${matchedDoctor.name}**\n*${matchedDoctor.role}*\n\n• **Department:** ${deptName}\n• **Qualifications:** ${matchedDoctor.qualifications}\n• **Specialty:** ${matchedDoctor.specialization}\n• **Consultation Days:** ${matchedDoctor.availableDays.join(", ")} (${matchedDoctor.timing})\n\n${matchedDoctor.biography}`,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         suggestedActions: [
-          { label: "Book Appointment", url: "/book-appointment" },
-          { label: "View All FAQs", url: "/faq" },
+          { label: `Book Appointment with ${matchedDoctor.name}`, url: `/book-appointment?doctor=${matchedDoctor.id}` },
+          { label: "View All Doctors", url: "/doctors" },
         ],
       };
     }
 
-    // Default Informative Response with Safety Warning
-    const defaultResponses: Record<Language, string> = {
-      en: `Thank you for contacting Indo States Health. I can assist you with:\n\n• **Master Health Check-up (₹3,500)** details and inclusions\n• Finding dual board-certified doctors like **Dr. Rajesh Rangaswamy**\n• Booking slots for **1.5T MRI, 128-slice CT, DEXA Scan, or 3D Mammograms**\n• Hospital location, operating hours, and free home sample collection\n• **ARDOR Care Foundation** charitable medical aid\n\n*Please note: I am an informational assistant and cannot provide medical diagnosis. How may I guide you today?*`,
-      ta: `இண்டோ ஸ்டேட்ஸ் ஹெல்த்திற்கு நன்றி. நான் உங்களுக்கு உதவக்கூடியவை:\n• **மாஸ்டர் ஹெல்த் செக்கப் (₹3,500)** தகவல்கள்\n• மருத்துவர்கள் மற்றும் சிறப்பு நிபுணர்கள் விபரம்\n• **MRI, CT, மேமோகிராம்** பரிசோதனை முன்பதிவு\n• மருத்துவமனை முகவரி மற்றும் இலவச மாதிரி எடுக்கும் வசதி\n\nநான் எவ்வாறு உதவலாம்?`,
-      hi: `इंडो स्टेट्स हेल्थ में आपका स्वागत है। मैं निम्न विषयों में आपकी सहायता कर सकता हूँ:\n• **मास्टर हेल्थ चेक-अप (₹3,500)** के विवरण\n• विशेषज्ञ डॉक्टरों की जानकारी\n• **MRI, CT स्कैन, मैमोग्राफी** बुकिंग\n• अस्पताल का पता और निःशुल्क होम सैंपल कलेक्शन\n\nमैं आपकी क्या मदद कर सकता हूँ?`,
+    // 6. DEFAULT GENERAL WELCOME / ASSISTANCE
+    const defaultReplies: Record<Language, string> = {
+      en: `Welcome to **IndoStates Help Desk**! I am here to assist you with verified information regarding our hospital in Arasur, Coimbatore.\n\nHow may I help you today? You can ask about:\n• Booking an appointment with our specialist physicians\n• ₹3,500 Master Health Checkup & free home sample collection\n• 1.5 Tesla MRI & 128-slice CT scan schedules\n• Emergency 24/7 acute trauma & code stroke helpline`,
+      ta: `**இண்டோஸ்டேட்ஸ் உதவி மையத்திற்கு** நல்வரவு! அரசூர், கோவை மருத்துவமனை பற்றிய தகவல்களை வழங்க நான் தயாராக உள்ளேன்.\n\n• மருத்துவர் சந்திப்பு முன்பதிவு\n• ₹3,500 மாஸ்டர் ஹெல்த் செக்கப் & இலவச ரத்த மாதிரி எடுக்கும் வசதி\n• 1.5T MRI மற்றும் 128-ஸ்லைஸ் CT பரிசோதனைகள்\n• 24/7 அவசர சிகிச்சை மற்றும் பக்கவாத உதவி எண் (0422-2111000) குறித்து கேட்கலாம்.`,
+      hi: `**इंडोस्टेट्स हेल्प डेस्क** में आपका स्वागत है! मैं कोयंबटूर स्थित हमारे अस्पताल के बारे में आधिकारिक जानकारी देने के लिए उपलब्ध हूँ।\n\nआप पूछ सकते हैं:\n• विशेषज्ञ डॉक्टरों के साथ अपॉइंटमेंट बुकिंग\n• ₹3,500 मास्टर हेल्थ चेकअप एवं फ्री होम सैंपल कलेक्शन\n• 1.5T MRI व 128-स्लाइस CT स्कैन की जानकारी\n• 24/7 आपातकालीन सहायता (0422-2111000)`,
+      ml: `**ഇൻഡോസ്റ്റേറ്റ്സ് ഹെൽപ്പ് ഡെസ്കിലേക്ക്** സ്വാഗതം! കോയമ്പത്തൂരിലെ ഞങ്ങളുടെ ആശുപത്രി വിവരങ്ങളിൽ ഞാൻ താങ്കളെ സഹായിക്കാം.\n\nഡോക്ടർ അപ്പോയിന്റ്മെന്റുകൾ, ₹3,500 മാസ്റ്റർ ഹെൽത്ത് ചെക്കപ്പ്, 1.5T MRI, 24/7 എമർജൻസി സഹായം എന്നിവയെക്കുറിച്ച് ചോദിക്കാവുന്നതാണ്.`,
+      te: `**ఇండోస్టేట్స్ హెల్ప్ డెస్క్** కు స్వాగతం! కోయంబత్తూర్ ఆసుపత్రి వివరాలపై మీకు సహాయం చేయడానికి నేను సిద్ధంగా ఉన్నాను.\n\nవైద్యుల అపాయింట్‌మెంట్లు, ₹3,500 మాస్టర్ హెల్త్ చెకప్, 1.5T MRI, 24/7 ఎమర్జెన్సీ సేవల గురించి మీరు అడగవచ్చు.`,
+      kn: `**ಇಂಡೋಸ್ಟೇಟ್ಸ್ ಸಹಾಯ ಕೇಂದ್ರಕ್ಕೆ** ಸುಸ್ವಾಗತ! ಕೊಯಮತ್ತೂರಿನ ನಮ್ಮ ಆಸ್ಪತ್ರೆಯ ಅಧಿಕೃತ ಮಾಹಿತಿಯನ್ನು ಒದಗಿಸಲು ನಾನು ಇಲ್ಲಿದ್ದೇನೆ.\n\nವೈದ್ಯರ ಅಪಾಯಿಂಟ್ಮೆಂಟ್, ₹3,500 ಮಾಸ್ಟರ್ ಹೆಲ್ತ್ ಚೆಕಪ್, 1.5T MRI, 24/7 ತುರ್ತು ಸೇವೆಗಳ ಬಗ್ಗೆ ವಿಚಾರಿಸಬಹುದು.`,
     };
 
     return {
       id: `msg-${Date.now()}`,
       sender: "assistant",
-      text: defaultResponses[lang] || defaultResponses.en,
+      text: defaultReplies[effectiveLang] || defaultReplies.en,
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       suggestedActions: [
-        { label: "Book Master Checkup (₹3,500)", url: "/book-appointment?package=master-health-checkup" },
-        { label: "Find a Doctor", url: "/doctors" },
-        { label: "Hospital Location & Directions", url: "/find-us" },
-        { label: "Frequently Asked Questions", url: "/faq" },
+        { label: "Book Doctor Appointment", url: "/book-appointment" },
+        { label: "Master Health Checkup (₹3,500)", url: "/health-packages" },
+        { label: "Find Doctors by Specialty", url: "/doctors" },
       ],
     };
   }
 }
 
 export async function generateIndoCareResponse(
-  messages: AIChatMessage[],
+  userQuery: string,
   lang: Language = "en"
-): Promise<AIChatMessage> {
-  const lastUserMsg = [...messages].reverse().find((m) => m.role === "user");
-  const query = lastUserMsg ? lastUserMsg.content : "Hello";
-  const result = await IndoCareAIService.processMessage(query, lang);
-  return {
-    id: result.id,
-    role: "assistant",
-    content: result.text,
-    timestamp: result.timestamp,
-    suggestedActions: result.suggestedActions?.map((a) => ({
-      label: a.label,
-      action: a.action || "navigate",
-      url: a.url || "#",
-    })),
-    isEmergencyAlert: result.isEmergencyAlert,
-  };
+): Promise<ChatMessage> {
+  return IndoCareAIService.processMessage(userQuery, lang);
 }
-

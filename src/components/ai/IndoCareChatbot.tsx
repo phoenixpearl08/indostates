@@ -21,6 +21,7 @@ import {
 import { IndoCareAIService, ChatMessage } from "@/lib/aiService";
 import { HospitalStore } from "@/lib/store";
 import { Language, TRANSLATIONS } from "@/data/translations";
+import { formatTime } from "@/lib/utils";
 
 export const IndoCareChatbot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -149,7 +150,7 @@ export const IndoCareChatbot: React.FC = () => {
         id: "msg-init",
         sender: "assistant",
         text: t.assistant.greeting,
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        timestamp: formatTime(new Date().toISOString()),
         suggestedActions: [
           { label: "Book Master Health Checkup", url: "/book-appointment?package=master-health-checkup" },
           { label: "Find a Doctor", url: "/doctors" },
@@ -176,7 +177,7 @@ export const IndoCareChatbot: React.FC = () => {
       id: `user-${Date.now()}`,
       sender: "user",
       text: query,
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      timestamp: formatTime(new Date().toISOString()),
     };
 
     setMessages((prev) => [...prev, userMsg]);
@@ -212,7 +213,7 @@ export const IndoCareChatbot: React.FC = () => {
           id: aiData.id || `msg-${Date.now()}`,
           sender: "assistant",
           text: aiData.content || aiData.text,
-          timestamp: aiData.timestamp || new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          timestamp: aiData.timestamp || formatTime(new Date().toISOString()),
           suggestedActions: aiData.suggestedActions,
           isEmergencyAlert: aiData.isEmergencyAlert,
         };
@@ -238,7 +239,7 @@ export const IndoCareChatbot: React.FC = () => {
             id: `err-${Date.now()}`,
             sender: "assistant",
             text: "I am temporarily experiencing network connectivity delays. Please contact our 24/7 reception desk at 0422-2111000 for immediate assistance.",
-            timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+            timestamp: formatTime(new Date().toISOString()),
           },
         ]);
       }
@@ -261,7 +262,7 @@ export const IndoCareChatbot: React.FC = () => {
         id: `msg-reset-${Date.now()}`,
         sender: "assistant",
         text: t.assistant.greeting,
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        timestamp: formatTime(new Date().toISOString()),
         suggestedActions: [
           { label: "Book Master Checkup (₹3,500)", url: "/book-appointment?package=master-health-checkup" },
           { label: "Meet Dr. Rajesh Rangaswamy", url: "/doctors/dr-rajesh-rangaswamy" },
@@ -278,14 +279,14 @@ export const IndoCareChatbot: React.FC = () => {
         <button
           onClick={() => setIsOpen(true)}
           className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 p-3 sm:px-4 sm:py-3.5 rounded-full bg-gradient-to-r from-hospital-700 to-navy-900 text-white shadow-floating hover:shadow-card hover:scale-105 active:scale-95 transition-all flex items-center gap-2.5 group border border-cyan-400/30"
-          aria-label="Open IndoCare AI Assistant"
+          aria-label="Open IndoStates Help Desk Assistant"
         >
           <div className="relative">
             <Sparkles className="w-5 h-5 text-cyan-300 animate-pulse" />
             <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full ring-2 ring-white" />
           </div>
           <span className="text-xs sm:text-sm font-bold tracking-wide hidden sm:inline">
-            IndoCare AI
+            Help Desk
           </span>
         </button>
       )}
@@ -299,25 +300,25 @@ export const IndoCareChatbot: React.FC = () => {
               : "bottom-20 right-2 sm:bottom-6 sm:right-6 w-[calc(100vw-16px)] sm:w-[420px] max-w-lg h-[75vh] sm:h-[620px]"
           }`}
           role="dialog"
-          aria-label="IndoCare AI Chat Window"
+          aria-label="IndoStates Help Desk Chat Window"
         >
           {/* Header */}
           <div className="bg-gradient-to-r from-navy-950 via-hospital-900 to-navy-950 text-white p-3.5 sm:p-4 flex items-center justify-between border-b border-hospital-800 shrink-0">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-hospital-500 to-cyan-400 text-navy-950 font-black text-sm flex items-center justify-center font-heading">
-                AI
+                HD
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
                   <span className="font-heading font-bold text-sm tracking-wide">
-                    IndoCare AI
+                    IndoStates Help Desk
                   </span>
                   <span className="text-[10px] bg-emerald-500/20 text-emerald-300 font-semibold px-1.5 py-0.2 rounded border border-emerald-400/30">
                     Online
                   </span>
                 </div>
                 <p className="text-[10px] text-cyan-300/80 -mt-0.5">
-                  Hospital Information & Appointment Guide
+                  Hospital Multilingual Assistant &amp; Guide
                 </p>
               </div>
             </div>
@@ -518,30 +519,62 @@ export const IndoCareChatbot: React.FC = () => {
               </div>
 
               {/* Preset Quick Prompts */}
-              <div className="p-2 bg-slate-100/70 border-t border-slate-200/60 flex items-center gap-1.5 overflow-x-auto text-[11px] shrink-0 no-scrollbar">
+              <div className="p-2 bg-slate-50 border-t border-slate-200/80 flex items-center gap-1.5 overflow-x-auto text-[11px] shrink-0 no-scrollbar">
                 <button
-                  onClick={() => handleSend("What is the Master Health Checkup price and inclusions?")}
-                  className="px-2.5 py-1 rounded-md bg-white border border-slate-200 hover:border-hospital-400 hover:text-hospital-700 whitespace-nowrap text-slate-700 transition-colors shadow-xs"
+                  type="button"
+                  onClick={() => handleSend("How do I book an appointment?")}
+                  className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:border-hospital-400 hover:text-hospital-700 whitespace-nowrap text-slate-700 font-medium transition-colors shadow-2xs"
                 >
-                  Master Checkup (₹3,500)
+                  Book an Appointment
                 </button>
                 <button
-                  onClick={() => handleSend("How can I book an appointment?")}
-                  className="px-2.5 py-1 rounded-md bg-white border border-slate-200 hover:border-hospital-400 hover:text-hospital-700 whitespace-nowrap text-slate-700 transition-colors shadow-xs"
+                  type="button"
+                  onClick={() => handleSend("Tell me about available doctors and specialists")}
+                  className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:border-hospital-400 hover:text-hospital-700 whitespace-nowrap text-slate-700 font-medium transition-colors shadow-2xs"
                 >
-                  Book Appointment
+                  Find a Doctor
                 </button>
                 <button
-                  onClick={() => handleSend("Tell me about Dr. Rajesh Rangaswamy")}
-                  className="px-2.5 py-1 rounded-md bg-white border border-slate-200 hover:border-hospital-400 hover:text-hospital-700 whitespace-nowrap text-slate-700 transition-colors shadow-xs"
+                  type="button"
+                  onClick={() => handleSend("What clinical departments and specialties do you offer?")}
+                  className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:border-hospital-400 hover:text-hospital-700 whitespace-nowrap text-slate-700 font-medium transition-colors shadow-2xs"
                 >
-                  Dr. Rajesh Rangaswamy
+                  Find a Department
                 </button>
                 <button
-                  onClick={() => handleSend("Where is the hospital located?")}
-                  className="px-2.5 py-1 rounded-md bg-white border border-slate-200 hover:border-hospital-400 hover:text-hospital-700 whitespace-nowrap text-slate-700 transition-colors shadow-xs"
+                  type="button"
+                  onClick={() => handleSend("What are the hospital services, MRI, CT, and packages?")}
+                  className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:border-hospital-400 hover:text-hospital-700 whitespace-nowrap text-slate-700 font-medium transition-colors shadow-2xs"
                 >
-                  Location & Hours
+                  Hospital Services
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSend("Can you help me check or reschedule my appointment?")}
+                  className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:border-hospital-400 hover:text-hospital-700 whitespace-nowrap text-slate-700 font-medium transition-colors shadow-2xs"
+                >
+                  Appointment Help
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSend("How can I download or view my lab reports?")}
+                  className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:border-hospital-400 hover:text-hospital-700 whitespace-nowrap text-slate-700 font-medium transition-colors shadow-2xs"
+                >
+                  Lab Reports
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSend("How does the Patient Portal and digital pass work?")}
+                  className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:border-hospital-400 hover:text-hospital-700 whitespace-nowrap text-slate-700 font-medium transition-colors shadow-2xs"
+                >
+                  Patient Portal Help
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSend("Where is the hospital located and what is the emergency phone number?")}
+                  className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:border-hospital-400 hover:text-hospital-700 whitespace-nowrap text-slate-700 font-medium transition-colors shadow-2xs"
+                >
+                  Contact Hospital
                 </button>
               </div>
 
@@ -556,7 +589,7 @@ export const IndoCareChatbot: React.FC = () => {
                         ? "bg-red-600 text-white animate-pulse"
                         : "bg-hospital-50 hover:bg-hospital-100 text-hospital-700 border border-hospital-200"
                     }`}
-                    title={isListening ? "Listening... Click to stop" : "Speak to IndoCare AI (Microphone)"}
+                    title={isListening ? "Listening... Click to stop" : "Speak to IndoStates Help Desk (Microphone)"}
                     aria-label="Voice input"
                   >
                     {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
@@ -567,7 +600,7 @@ export const IndoCareChatbot: React.FC = () => {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder={isListening ? "Listening... Speak now..." : "Ask IndoCare AI anything or speak..."}
+                    placeholder={isListening ? "Listening... Speak now..." : "Ask IndoStates Help Desk anything or speak..."}
                     className="flex-1 py-2.5 px-3.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-hospital-500 focus:bg-white transition-all text-slate-900 placeholder:text-slate-400"
                     disabled={isLoading}
                   />

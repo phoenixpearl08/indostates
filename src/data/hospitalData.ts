@@ -11,6 +11,17 @@ export interface Doctor {
   availableDays: string[];
   timing: string;
   languages: string[];
+  // Clinical convenience extensions
+  department?: string;
+  qualification?: string;
+  specialty?: string;
+  phone?: string;
+  email?: string;
+  opdRoom?: string;
+  licenseNumber?: string;
+  about?: string;
+  image?: string;
+  experience?: string;
 }
 
 export interface Department {
@@ -818,7 +829,7 @@ export const FAQS: FAQItem[] = [
     id: "faq-9",
     question: "What languages does Indo States Health support?",
     answer:
-      "Our medical staff and IndoCare AI assistant fluently assist patients in English, தமிழ் (Tamil), and हिंदी (Hindi).",
+      "Our medical staff and IndoStates Help Desk fluently assist patients in English, தமிழ் (Tamil), हिंदी (Hindi), മലയാളം (Malayalam), తెలుగు (Telugu), and ಕನ್ನಡ (Kannada).",
     category: "General",
   },
   {

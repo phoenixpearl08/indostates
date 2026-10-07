@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyUserCredentials } from "@/lib/serverAuth";
+import { getRoleDashboard } from "@/lib/rbac";
+import { HMSService } from "@/lib/hmsService";
 
 export async function POST(req: NextRequest) {
   try {
@@ -22,18 +24,23 @@ export async function POST(req: NextRequest) {
     }
 
     // Role-based target redirect determined strictly on the server
-    let redirectUrl = "/portal/patient";
-    if (user.role === "doctor") {
-      redirectUrl = "/doctor/dashboard";
-    } else if (user.role === "admin") {
-      redirectUrl = "/admin/dashboard";
-    }
+    const redirectUrl = getRoleDashboard(user.role);
+
+    // Record audit log
+    HMSService.recordAuditLog(
+      user.id,
+      user.name,
+      user.role,
+      "auth.login",
+      `users/${user.email}`,
+      { email: user.email, role: user.role }
+    );
 
     const response = NextResponse.json({
       success: true,
       user,
       redirectUrl,
-      message: `Authenticated successfully as ${user.role.toUpperCase()}.`,
+      message: `Authenticated successfully as ${user.role}.`,
     });
 
     // Set secure auth cookie
@@ -50,6 +57,7 @@ export async function POST(req: NextRequest) {
       name: user.name,
       email: user.email,
       role: user.role,
+      uhid: user.uhid,
     }), {
       httpOnly: false,
       secure: process.env.NODE_ENV === "production",

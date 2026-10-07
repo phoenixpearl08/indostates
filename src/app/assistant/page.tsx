@@ -18,11 +18,12 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
-import { generateIndoCareResponse, AIChatMessage } from "@/lib/aiService";
+import { AIChatMessage } from "@/lib/aiService";
 import { HospitalStore } from "@/lib/store";
 import { Language } from "@/data/translations";
 import { HOSPITAL_INFO } from "@/data/hospitalData";
 import { Button } from "@/components/ui/Button";
+import { formatTime } from "@/lib/utils";
 
 export default function AssistantPage() {
   const [messages, setMessages] = useState<AIChatMessage[]>([
@@ -30,19 +31,19 @@ export default function AssistantPage() {
       id: "init-welcome",
       role: "assistant",
       content:
-        "Hello! I am IndoCare AI, the virtual healthcare and voice assistant for Indo States Health. How may I assist you today? You can speak to me or type your questions about our doctors, diagnostic scans (1.5T MRI / 128-slice CT), or the ₹3,500 Master Health Checkup.",
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        "Hello! I am IndoStates Help Desk, your official virtual healthcare and hospital assistant for Indo States Health. How may I assist you today? You can type or speak in English, Tamil (தமிழ்), Hindi (हिंदी), Malayalam (മലയാളം), Telugu (తెలుగు), or Kannada (ಕನ್ನಡ) about our specialist doctors, diagnostic scans (1.5T MRI / 128-slice CT), or the ₹3,500 Master Health Checkup.",
+      timestamp: "10:00 AM",
       suggestedActions: [
-        { label: "Book Master Health Checkup", action: "navigate", url: "/book-appointment" },
-        { label: "1.5T MRI Details", action: "navigate", url: "/diagnostic-center/mri" },
-        { label: "Find a Specialist", action: "navigate", url: "/doctors" },
+        { label: "Book Master Health Checkup (₹3,500)", action: "navigate", url: "/book-appointment" },
+        { label: "1.5T MRI Scan Information", action: "navigate", url: "/diagnostic-center/mri" },
+        { label: "Find Specialist Physicians", action: "navigate", url: "/doctors" },
       ],
     },
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [lang, setLang] = useState<Language>("en");
-  
+
   // Voice Assistant States
   const [isListening, setIsListening] = useState(false);
   const [speechError, setSpeechError] = useState<string | null>(null);
@@ -54,6 +55,9 @@ export default function AssistantPage() {
 
   useEffect(() => {
     setLang(HospitalStore.getLanguage());
+    const handleLang = () => setLang(HospitalStore.getLanguage());
+    window.addEventListener("ish_language_change", handleLang);
+    return () => window.removeEventListener("ish_language_change", handleLang);
   }, []);
 
   useEffect(() => {
@@ -85,9 +89,12 @@ export default function AssistantPage() {
       recognition.continuous = false;
       recognition.interimResults = false;
 
-      // Set recognition dialect
+      // Set recognition dialect for supported languages
       if (lang === "ta") recognition.lang = "ta-IN";
       else if (lang === "hi") recognition.lang = "hi-IN";
+      else if (lang === "ml") recognition.lang = "ml-IN";
+      else if (lang === "te") recognition.lang = "te-IN";
+      else if (lang === "kn") recognition.lang = "kn-IN";
       else recognition.lang = "en-IN";
 
       recognition.onstart = () => {
@@ -109,7 +116,7 @@ export default function AssistantPage() {
         if (event.error === "not-allowed") {
           setSpeechError("Microphone permission denied. Please allow microphone permissions or type below.");
         } else {
-          setSpeechError("Voice could not be recognized clearly. Please try speaking closer or type your query.");
+          setSpeechError("Could not recognize voice. Please try speaking closer or type your query.");
         }
         setIsListening(false);
       };
@@ -119,16 +126,16 @@ export default function AssistantPage() {
       };
 
       recognition.start();
-    } catch (err: any) {
-      console.error("SpeechRecognition start error:", err);
-      setSpeechError("Microphone could not be activated. Please type your query.");
+    } catch {
+      setSpeechError("Speech recognition service failed to initialize.");
       setIsListening(false);
     }
   };
 
-  // Text-to-Speech Output
+  // Text to Speech
   const speakText = (text: string) => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+
     window.speechSynthesis.cancel();
 
     const cleanText = text
@@ -139,6 +146,9 @@ export default function AssistantPage() {
     const utterance = new SpeechSynthesisUtterance(cleanText);
     if (lang === "ta") utterance.lang = "ta-IN";
     else if (lang === "hi") utterance.lang = "hi-IN";
+    else if (lang === "ml") utterance.lang = "ml-IN";
+    else if (lang === "te") utterance.lang = "te-IN";
+    else if (lang === "kn") utterance.lang = "kn-IN";
     else utterance.lang = "en-IN";
 
     utterance.onstart = () => setIsSpeaking(true);
@@ -155,48 +165,93 @@ export default function AssistantPage() {
     }
   };
 
-  const handleSend = async (textToSend?: string) => {
-    const text = textToSend || input;
-    if (!text.trim() || isLoading) return;
+  const handleSend = async (customQuery?: string) => {
+    const textToSend = (customQuery || input).trim();
+    if (!textToSend || isLoading) return;
 
     const userMsg: AIChatMessage = {
-      id: "u-" + Date.now(),
+      id: `msg-${Date.now()}`,
       role: "user",
-      content: text,
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      content: textToSend,
+      timestamp: formatTime(new Date().toISOString()),
     };
 
-    setMessages((prev) => [...prev, userMsg]);
+    const newMessages = [...messages, userMsg];
+    setMessages(newMessages);
     setInput("");
     setIsLoading(true);
 
     try {
-      const response = await generateIndoCareResponse([...messages, userMsg], lang);
-      setMessages((prev) => [...prev, response]);
-      if (isVoiceAutoRead) {
-        speakText(response.content);
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: newMessages,
+          language: lang,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const assistantMsg: AIChatMessage = {
+          id: data.id || `msg-${Date.now()}`,
+          role: "assistant",
+          content: data.content,
+          timestamp: data.timestamp || formatTime(new Date().toISOString()),
+          suggestedActions: data.suggestedActions,
+          isEmergencyAlert: data.isEmergencyAlert,
+        };
+        setMessages((prev) => [...prev, assistantMsg]);
+
+        if (isVoiceAutoRead && data.content) {
+          speakText(data.content);
+        }
+      } else {
+        const errorMsg: AIChatMessage = {
+          id: `msg-err-${Date.now()}`,
+          role: "assistant",
+          content: "I apologize, our help desk service experienced a momentary delay. Please ask again or dial 0422-2111000 for direct hospital support.",
+          timestamp: formatTime(new Date().toISOString()),
+        };
+        setMessages((prev) => [...prev, errorMsg]);
       }
     } catch {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: "err-" + Date.now(),
-          role: "assistant",
-          content: "I apologize, but I encountered a momentary connection glitch. Please try again or call our hospital desk directly at 0422-2111000.",
-          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        },
-      ]);
+      const networkErrorMsg: AIChatMessage = {
+        id: `msg-net-err-${Date.now()}`,
+        role: "assistant",
+        content: "Network communication error. Please check your internet connection or call our hospital desk at 0422-2111000.",
+        timestamp: formatTime(new Date().toISOString()),
+      };
+      setMessages((prev) => [...prev, networkErrorMsg]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const samplePrompts = [
-    "What is included in the ₹3,500 Master Health Checkup?",
-    "Tell me about Dr. Rajesh Rangaswamy's qualifications.",
-    "Do you offer free home blood sample collection in Coimbatore?",
-    "How does the 128-slice CT coronary calcium score work?",
+  const handleRestart = () => {
+    stopSpeaking();
+    setMessages([
+      {
+        id: `msg-init-${Date.now()}`,
+        role: "assistant",
+        content:
+          "Welcome to IndoStates Help Desk. How can I assist you with appointments, doctors, or diagnostic services today?",
+        timestamp: formatTime(new Date().toISOString()),
+        suggestedActions: [
+          { label: "Book Master Health Checkup", action: "navigate", url: "/book-appointment" },
+          { label: "1.5T MRI Scan Information", action: "navigate", url: "/diagnostic-center/mri" },
+          { label: "Find Specialist Physicians", action: "navigate", url: "/doctors" },
+        ],
+      },
+    ]);
+  };
+
+  const quickPrompts = [
+    "Tomorrow doctor appointment irukka?",
+    "Master health checkup details & price?",
+    "1.5T MRI scan timings & preparation?",
     "Where is Indo States Health located?",
+    "How to reach 24/7 Stroke Emergency?",
   ];
 
   return (
@@ -211,10 +266,10 @@ export default function AssistantPage() {
             <div>
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-cyan-900/60 border border-cyan-700 text-cyan-300 text-[11px] font-semibold tracking-wide uppercase mb-1">
                 <Sparkles className="w-3 h-3" />
-                Multilingual Voice & Information Assistant
+                Multilingual AI &amp; Information Assistant
               </div>
               <h1 className="text-2xl sm:text-3xl font-extrabold font-display">
-                IndoCare AI Voice Assistant
+                IndoStates Help Desk
               </h1>
               <p className="text-xs text-hospital-200">
                 Grounded strictly in verified hospital services, doctor credentials, and scheduling rules.
@@ -255,6 +310,9 @@ export default function AssistantPage() {
                 <option value="en" className="bg-slate-900 text-white">English</option>
                 <option value="ta" className="bg-slate-900 text-white">தமிழ் (Tamil)</option>
                 <option value="hi" className="bg-slate-900 text-white">हिंदी (Hindi)</option>
+                <option value="ml" className="bg-slate-900 text-white">മലയാളം (Malayalam)</option>
+                <option value="te" className="bg-slate-900 text-white">తెలుగు (Telugu)</option>
+                <option value="kn" className="bg-slate-900 text-white">ಕನ್ನಡ (Kannada)</option>
               </select>
             </div>
           </div>
@@ -267,7 +325,7 @@ export default function AssistantPage() {
         <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-2.5 mb-3 shadow-sm">
           <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
           <div>
-            <strong>Medical Notice:</strong> IndoCare AI provides hospital information and scheduling assistance. It does not provide medical diagnoses or prescriptions. For acute emergencies, call <strong>{HOSPITAL_INFO.emergencyPhone}</strong> immediately.
+            <strong>Medical Notice:</strong> IndoStates Help Desk provides hospital information and scheduling assistance. It does not provide medical diagnoses or prescriptions. For acute emergencies, call <strong>{HOSPITAL_INFO.emergencyPhone}</strong> immediately.
           </div>
         </div>
 
@@ -299,141 +357,168 @@ export default function AssistantPage() {
           </div>
         )}
 
-        {/* Conversation Area */}
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm flex-1 flex flex-col overflow-hidden h-[620px]">
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
-            {messages.map((msg) => (
+        {/* Messages Card */}
+        <div className="flex-1 bg-white rounded-3xl border border-slate-200 shadow-sm p-4 sm:p-6 overflow-y-auto space-y-4 min-h-[420px] max-h-[620px]">
+          {messages.map((m) => {
+            const isUser = m.role === "user";
+            return (
               <div
-                key={msg.id}
-                className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                key={m.id}
+                className={`flex gap-3 ${isUser ? "flex-row-reverse" : "flex-row"}`}
               >
-                {msg.role === "assistant" && (
-                  <div className="w-8 h-8 rounded-xl bg-hospital-900 text-white flex items-center justify-center shrink-0 mt-1 shadow-sm">
-                    <Bot className="w-4 h-4 text-cyan-300" />
-                  </div>
-                )}
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                    isUser
+                      ? "bg-slate-900 text-white font-bold text-xs"
+                      : "bg-cyan-100 text-cyan-800 border border-cyan-200"
+                  }`}
+                >
+                  {isUser ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4 text-cyan-700" />}
+                </div>
 
-                <div className="max-w-[85%] sm:max-w-[75%] space-y-2">
+                <div className={`space-y-2 max-w-[85%] sm:max-w-[75%]`}>
                   <div
-                    className={`rounded-2xl px-4 py-3 text-xs sm:text-sm leading-relaxed whitespace-pre-line shadow-sm ${
-                      msg.role === "user"
-                        ? "bg-hospital-900 text-white rounded-tr-none"
-                        : "bg-slate-50 text-slate-800 border border-slate-200 rounded-tl-none"
+                    className={`p-4 rounded-2xl text-xs sm:text-sm leading-relaxed ${
+                      isUser
+                        ? "bg-hospital-700 text-white rounded-tr-none"
+                        : m.isEmergencyAlert
+                        ? "bg-red-50 border border-red-300 text-red-950 rounded-tl-none font-medium"
+                        : "bg-slate-50 border border-slate-200 text-slate-800 rounded-tl-none"
                     }`}
                   >
-                    {msg.content}
+                    <div className="whitespace-pre-line">{m.content}</div>
+
+                    <div className={`text-[10px] mt-1.5 flex items-center justify-between gap-4 ${isUser ? "text-hospital-200" : "text-slate-400"}`}>
+                      <span>{m.timestamp}</span>
+                      {!isUser && (
+                        <button
+                          onClick={() => speakText(m.content)}
+                          className="hover:text-cyan-700 transition flex items-center gap-1"
+                          title="Read this answer aloud"
+                        >
+                          <Volume2 className="w-3 h-3" />
+                          <span>Speak</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Read Aloud Button for Assistant Messages */}
-                  {msg.role === "assistant" && (
-                    <div className="flex items-center gap-3 text-[10px] text-slate-400 pl-1">
-                      <span>{msg.timestamp}</span>
-                      <button
-                        onClick={() => speakText(msg.content)}
-                        className="inline-flex items-center gap-1 text-cyan-700 hover:text-hospital-900 font-semibold transition"
-                        title="Read this message aloud"
-                      >
-                        <Volume2 className="w-3.5 h-3.5" />
-                        <span>Listen Aloud</span>
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Suggested actions if present */}
-                  {msg.suggestedActions && msg.suggestedActions.length > 0 && (
+                  {/* Suggested Quick Navigation CTAs */}
+                  {m.suggestedActions && m.suggestedActions.length > 0 && (
                     <div className="flex flex-wrap gap-2 pt-1">
-                      {msg.suggestedActions.map((action, aIdx) => (
-                        <Link key={aIdx} href={action.url}>
-                          <button className="px-3 py-1.5 rounded-xl bg-hospital-50 border border-hospital-200 text-hospital-800 text-xs font-semibold hover:bg-hospital-100 transition flex items-center gap-1.5 shadow-sm">
-                            <span>{action.label}</span>
-                            <ArrowRight className="w-3 h-3 text-cyan-700" />
-                          </button>
+                      {m.suggestedActions.map((action, idx) => (
+                        <Link
+                          key={idx}
+                          href={action.url}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-50 hover:bg-cyan-100 text-cyan-900 border border-cyan-200 text-xs font-semibold transition shadow-2xs"
+                        >
+                          <span>{action.label}</span>
+                          <ArrowRight className="w-3 h-3 text-cyan-700" />
                         </Link>
                       ))}
                     </div>
                   )}
                 </div>
-
-                {msg.role === "user" && (
-                  <div className="w-8 h-8 rounded-xl bg-cyan-600 text-white flex items-center justify-center shrink-0 mt-1 shadow-sm">
-                    <User className="w-4 h-4" />
-                  </div>
-                )}
               </div>
-            ))}
+            );
+          })}
 
-            {isLoading && (
-              <div className="flex gap-3 justify-start">
-                <div className="w-8 h-8 rounded-xl bg-hospital-900 text-white flex items-center justify-center shrink-0 shadow-sm">
-                  <Bot className="w-4 h-4 text-cyan-300" />
-                </div>
-                <div className="bg-slate-50 border border-slate-200 rounded-2xl rounded-tl-none px-4 py-3 text-xs flex items-center gap-2">
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-hospital-600" />
-                  <span className="text-slate-500 font-medium">IndoCare AI is thinking...</span>
-                </div>
+          {isLoading && (
+            <div className="flex gap-3 items-center">
+              <div className="w-8 h-8 rounded-full bg-cyan-100 text-cyan-800 flex items-center justify-center">
+                <Bot className="w-4 h-4 text-cyan-700 animate-spin" />
               </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
+              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl rounded-tl-none text-xs text-slate-500 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-cyan-600 rounded-full animate-bounce" />
+                <span className="w-1.5 h-1.5 bg-cyan-600 rounded-full animate-bounce [animation-delay:0.2s]" />
+                <span className="w-1.5 h-1.5 bg-cyan-600 rounded-full animate-bounce [animation-delay:0.4s]" />
+                <span className="ml-1 text-[11px] font-medium text-slate-600">
+                  IndoStates Help Desk is reviewing clinical records...
+                </span>
+              </div>
+            </div>
+          )}
 
-          {/* Sample Prompts Tray */}
-          <div className="px-4 sm:px-6 py-2 border-t border-slate-100 bg-slate-50/70 overflow-x-auto scrollbar-none flex gap-2">
-            {samplePrompts.map((prompt, pIdx) => (
-              <button
-                key={pIdx}
-                onClick={() => handleSend(prompt)}
-                disabled={isLoading}
-                className="px-3 py-1 rounded-full bg-white border border-slate-200 hover:border-hospital-300 text-slate-700 text-[11px] whitespace-nowrap transition disabled:opacity-50 shrink-0"
-              >
-                {prompt}
-              </button>
-            ))}
-          </div>
+          <div ref={messagesEndRef} />
+        </div>
 
-          {/* Input Box with Microphone Voice Control */}
-          <div className="p-4 sm:p-5 border-t border-slate-200 bg-white">
-            <form
-              onSubmit={(e) => {
+        {/* Quick Sample Questions Bar */}
+        <div className="mt-3 flex items-center gap-2 overflow-x-auto py-1">
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0">
+            Suggested:
+          </span>
+          {quickPrompts.map((q, idx) => (
+            <button
+              key={idx}
+              onClick={() => handleSend(q)}
+              className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-600 hover:text-cyan-800 hover:bg-cyan-50 text-xs font-medium transition shrink-0 whitespace-nowrap shadow-2xs"
+            >
+              {q}
+            </button>
+          ))}
+        </div>
+
+        {/* Input Bar */}
+        <div className="mt-3 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-2">
+          <button
+            type="button"
+            onClick={toggleListening}
+            className={`p-2.5 rounded-xl transition ${
+              isListening
+                ? "bg-red-600 text-white animate-pulse"
+                : "bg-slate-100 hover:bg-cyan-100 text-slate-600 hover:text-cyan-800"
+            }`}
+            title={isListening ? "Listening... Click to stop" : "Speak your message via microphone"}
+          >
+            {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+          </button>
+
+          <input
+            type="text"
+            placeholder={
+              lang === "ta"
+                ? "மருத்துவ சந்திப்பு, பரிசோதனைகள், மருத்துவர்கள் பற்றி கேட்கவும்..."
+                : lang === "hi"
+                ? "अपॉइंटमेंट, डॉक्टरों या परीक्षणों के बारे में पूछें..."
+                : "Ask about appointments, specialists, 1.5T MRI, or packages..."
+            }
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
                 handleSend();
-              }}
-              className="flex items-center gap-2"
-            >
-              <button
-                type="button"
-                onClick={toggleListening}
-                className={`p-3 rounded-2xl transition-all shadow-sm active:scale-95 shrink-0 ${
-                  isListening
-                    ? "bg-red-600 text-white animate-pulse"
-                    : "bg-hospital-50 hover:bg-hospital-100 text-hospital-700 border border-hospital-200"
-                }`}
-                title={isListening ? "Listening... Click to stop" : "Speak to IndoCare AI (Microphone)"}
-                aria-label="Voice input"
-              >
-                {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-              </button>
+              }
+            }}
+            className="flex-1 px-3 py-2 text-xs sm:text-sm text-slate-900 focus:outline-none placeholder:text-slate-400"
+          />
 
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder={isListening ? "Listening to your voice... Speak now..." : "Ask IndoCare AI anything or click the microphone to speak..."}
-                className="flex-1 px-4 py-3 rounded-2xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-hospital-500 shadow-inner"
-                disabled={isLoading}
-              />
+          <Button
+            variant="primary"
+            size="sm"
+            disabled={isLoading || !input.trim()}
+            onClick={() => handleSend()}
+            className="bg-hospital-700 hover:bg-hospital-800 text-white px-3 sm:px-4 shrink-0 font-semibold"
+          >
+            <Send className="w-3.5 h-3.5 mr-1" />
+            <span className="hidden sm:inline">Ask</span>
+          </Button>
+        </div>
 
-              <Button
-                variant="primary"
-                size="md"
-                type="submit"
-                disabled={!input.trim() || isLoading}
-                className="rounded-2xl shrink-0"
-                rightIcon={<Send className="w-4 h-4" />}
-              >
-                Send
-              </Button>
-            </form>
+        {/* Footer Ribbon */}
+        <div className="mt-3 flex items-center justify-between text-[11px] text-slate-400 px-2">
+          <div className="flex items-center gap-1.5">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Encrypted Hospital Help Desk Session</span>
           </div>
+
+          <button
+            onClick={handleRestart}
+            className="hover:text-slate-700 transition flex items-center gap-1"
+          >
+            <RefreshCw className="w-3 h-3" />
+            <span>Reset Conversation</span>
+          </button>
         </div>
       </div>
     </div>

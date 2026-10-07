@@ -74,6 +74,7 @@ export async function GET(req: NextRequest) {
                 : "Official Appointment Verified with Indo States Health.",
               appointment: {
                 id: data.id,
+                appointmentId: data.appointment_id || data.id,
                 referenceCode: data.reference_code,
                 patientNameMasked: maskPatientName(data.patient_name),
                 patientPhoneMasked: maskPhone(data.patient_phone),
@@ -101,6 +102,7 @@ export async function GET(req: NextRequest) {
     const matched = globalAppointments.find(
       (a: any) =>
         a.id === queryKey ||
+        a.appointmentId === queryKey ||
         a.referenceCode?.toUpperCase() === queryKey.toUpperCase() ||
         a.verificationToken === queryKey
     );
@@ -122,6 +124,7 @@ export async function GET(req: NextRequest) {
           : "Official Appointment Verified with Indo States Health.",
         appointment: {
           id: matched.id,
+          appointmentId: matched.appointmentId || matched.id,
           referenceCode: matched.referenceCode,
           patientNameMasked: maskPatientName(matched.patientName),
           patientPhoneMasked: maskPhone(matched.patientPhone),

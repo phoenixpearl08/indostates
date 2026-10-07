@@ -19,7 +19,7 @@ export function generateStaticParams() {
 }
 
 export function generateMetadata({ params }: DepartmentPageProps): Metadata {
-  const dept = DEPARTMENTS.find((d) => d.slug === params.slug);
+  const dept = DEPARTMENTS.find((d) => d.slug === params.slug || d.id === params.slug);
   if (!dept) {
     return { title: "Department Not Found | Indo States Health" };
   }
@@ -30,7 +30,7 @@ export function generateMetadata({ params }: DepartmentPageProps): Metadata {
 }
 
 export default function DepartmentDetailPage({ params }: DepartmentPageProps) {
-  const dept = DEPARTMENTS.find((d) => d.slug === params.slug);
+  const dept = DEPARTMENTS.find((d) => d.slug === params.slug || d.id === params.slug);
   if (!dept) {
     notFound();
   }

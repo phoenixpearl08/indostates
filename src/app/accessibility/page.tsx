@@ -71,7 +71,7 @@ export default function AccessibilityStatementPage() {
             <section>
               <h2 className="text-base font-bold text-slate-900 mb-2">Multilingual Support</h2>
               <p>
-                To serve regional patients effectively, our entire core user interface, doctor profiles, and IndoCare AI chatbot can be toggled between <strong>English</strong>, <strong>தமிழ் (Tamil)</strong>, and <strong>हिंदी (Hindi)</strong>.
+                To serve regional patients effectively, our entire core user interface, doctor profiles, and IndoStates Help Desk assistant can be toggled between <strong>English</strong>, <strong>தமிழ் (Tamil)</strong>, <strong>हिंदी (Hindi)</strong>, <strong>മലയാളം (Malayalam)</strong>, <strong>తెలుగు (Telugu)</strong>, and <strong>ಕನ್ನಡ (Kannada)</strong>.
               </p>
             </section>
 

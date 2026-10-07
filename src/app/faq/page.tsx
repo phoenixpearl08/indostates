@@ -127,7 +127,7 @@ export default function FAQPage() {
               </p>
               <Link href="/assistant">
                 <Button variant="primary" size="sm" leftIcon={<Bot className="w-4 h-4" />}>
-                  Ask IndoCare AI
+                  Ask IndoStates Help Desk
                 </Button>
               </Link>
             </div>
@@ -141,15 +141,15 @@ export default function FAQPage() {
               <Bot className="w-7 h-7 text-cyan-300" />
             </div>
             <div>
-              <h3 className="text-base font-bold font-display text-white">Have a specific medical question?</h3>
+              <h3 className="text-base font-bold font-display text-white">Have a specific question?</h3>
               <p className="text-xs text-hospital-200">
-                Ask IndoCare AI for instant answers grounded strictly in verified hospital facts.
+                Ask IndoStates Help Desk for instant answers grounded strictly in verified hospital facts.
               </p>
             </div>
           </div>
           <Link href="/assistant">
             <Button variant="secondary" size="md" className="shrink-0" leftIcon={<Sparkles className="w-4 h-4" />}>
-              Open IndoCare AI
+              Open Help Desk
             </Button>
           </Link>
         </div>

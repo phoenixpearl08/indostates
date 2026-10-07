@@ -1,11 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
-import { AccessibilityBar } from "@/components/ui/AccessibilityBar";
-import { EmergencyBanner } from "@/components/layout/EmergencyBanner";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
-import { IndoCareChatbot } from "@/components/ai/IndoCareChatbot";
 import { LayoutWrapper } from "@/components/layout/LayoutWrapper";
 
 const inter = Inter({
@@ -82,9 +77,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${outfit.variable}`}>
       <body className="min-h-screen flex flex-col antialiased selection:bg-hospital-100 selection:text-hospital-900">
-        <LayoutWrapper>
-          {children}
-        </LayoutWrapper>
+        <div id="root-portal" className="flex flex-col min-h-screen">
+          <LayoutWrapper>
+            {children}
+          </LayoutWrapper>
+        </div>
       </body>
     </html>
   );

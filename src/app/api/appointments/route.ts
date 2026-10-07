@@ -2,14 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateReferenceCode } from "@/lib/utils";
 import { DOCTORS } from "@/data/hospitalData";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
+import { HMSService, generateAppointmentId } from "@/lib/hmsService";
 
 export const dynamic = "force-dynamic";
 
 export interface ServerAppointment {
   id: string;
+  appointmentId?: string;
   referenceCode: string;
   verificationToken?: string;
   patientId?: string;
+  patientUhid?: string;
   patientName: string;
   patientPhone: string;
   patientEmail: string;
@@ -20,10 +23,12 @@ export interface ServerAppointment {
   targetName: string;
   doctorId?: string;
   doctorName?: string;
+  departmentId?: string;
   date: string;
   timeSlot: string;
   notes?: string;
-  status: "confirmed" | "completed" | "cancelled" | "pending" | "checked_in" | "in_consultation" | "expired";
+  tokenNumber?: string;
+  status: any;
   createdAt: string;
   paymentStatus: "pay_on_arrival" | "paid_online";
 }
@@ -107,6 +112,9 @@ export async function GET(req: NextRequest) {
     const doctorId = searchParams.get("doctorId");
     const doctorName = searchParams.get("doctorName");
     const patientPhone = searchParams.get("phone");
+    const patientEmail = searchParams.get("email");
+    const patientUhid = searchParams.get("uhid");
+    const patientId = searchParams.get("patientId");
     const status = searchParams.get("status");
     const date = searchParams.get("date");
 
@@ -117,6 +125,7 @@ export async function GET(req: NextRequest) {
         if (admin) {
           let query = admin.from("appointments").select("*").order("appointment_date", { ascending: false });
           if (doctorId) query = query.eq("doctor_id", doctorId);
+          if (patientUhid) query = query.eq("patient_uhid", patientUhid);
           if (status && status !== "all") query = query.eq("status", status);
           if (date) query = query.eq("appointment_date", date);
 
@@ -130,8 +139,49 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // 2. Fallback to server registry
-    let results = getStoredServerAppointments();
+    // 2. Query HMSService appointments as well
+    const hmsAppts = HMSService.getAppointments({
+      doctorId: doctorId || undefined,
+      patientId: patientId || patientUhid || undefined,
+      status: (status as any) || "all",
+      date: date || undefined,
+    }).map((a) => ({
+      id: a.id,
+      appointmentId: a.appointmentId || a.id,
+      referenceCode: a.referenceCode,
+      verificationToken: a.verificationToken,
+      patientId: a.patientId,
+      patientUhid: a.patientUhid,
+      patientName: a.patientName,
+      patientPhone: a.patientPhone,
+      patientEmail: a.patientEmail,
+      patientAge: a.patientAge,
+      patientGender: a.patientGender,
+      serviceType: a.serviceType,
+      targetId: a.targetId,
+      targetName: a.targetName,
+      doctorId: a.doctorId,
+      doctorName: a.doctorName,
+      departmentId: a.departmentId,
+      date: a.appointmentDate,
+      timeSlot: a.timeSlot,
+      notes: a.notes,
+      tokenNumber: a.tokenNumber,
+      status: a.status,
+      createdAt: a.createdAt,
+      paymentStatus: a.paymentStatus,
+    }));
+
+    // 3. Fallback to server registry
+    let results = [...getStoredServerAppointments(), ...hmsAppts];
+    // Deduplicate by referenceCode or id
+    const seen = new Set<string>();
+    results = results.filter((a) => {
+      const key = a.referenceCode || a.id;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
 
     if (doctorId) {
       results = results.filter((a) => a.doctorId === doctorId || a.targetId === doctorId);
@@ -139,8 +189,18 @@ export async function GET(req: NextRequest) {
       results = results.filter((a) => a.doctorName?.toLowerCase().includes(doctorName.toLowerCase()));
     }
 
-    if (patientPhone) {
-      results = results.filter((a) => a.patientPhone.includes(patientPhone));
+    if (patientUhid) {
+      results = results.filter(
+        (a) => a.patientUhid === patientUhid || a.patientId === patientUhid
+      );
+    } else if (patientPhone) {
+      const cleanSearch = patientPhone.replace(/[^0-9]/g, "");
+      results = results.filter((a) => {
+        const cleanA = a.patientPhone ? a.patientPhone.replace(/[^0-9]/g, "") : "";
+        return cleanA.includes(cleanSearch) || (cleanSearch.length >= 10 && cleanA.endsWith(cleanSearch.slice(-10)));
+      });
+    } else if (patientEmail) {
+      results = results.filter((a) => a.patientEmail?.toLowerCase() === patientEmail.toLowerCase());
     }
 
     if (status && status !== "all") {
@@ -241,17 +301,51 @@ export async function POST(req: NextRequest) {
 
     // 5. Server-Side Duplicate & Double-Booking Prevention
     const existing = getStoredServerAppointments();
-    const isDoubleBooked = existing.some((a) => {
-      if (a.status === "cancelled") return false;
+    const isDoubleBookedMemory = existing.some((a) => {
+      if (a.status === "cancelled" || a.status === "CANCELLED") return false;
       const isSameDateSlot = a.date === effectiveDate && a.timeSlot === timeSlot;
       const isSameTarget = a.targetId === (targetId || effectiveDoctorId) || (effectiveDoctorId && a.doctorId === effectiveDoctorId);
       return isSameDateSlot && isSameTarget;
     });
 
-    if (isDoubleBooked) {
+    const isDoubleBookedHMS = HMSService.getAppointments({
+      doctorId: effectiveDoctorId,
+      date: effectiveDate,
+      status: "all",
+    }).some(
+      (a) =>
+        a.timeSlot === timeSlot &&
+        a.status !== "CANCELLED" &&
+        a.status !== "REJECTED"
+    );
+
+    let isDoubleBookedSupabase = false;
+    if (isSupabaseConfigured() && effectiveDoctorId) {
+      try {
+        const admin = getSupabaseAdmin();
+        if (admin) {
+          const { data: dbConflicts } = await admin
+            .from("appointments")
+            .select("id")
+            .eq("doctor_id", effectiveDoctorId)
+            .eq("appointment_date", effectiveDate)
+            .eq("time_slot", timeSlot)
+            .neq("status", "cancelled")
+            .limit(1);
+
+          if (dbConflicts && dbConflicts.length > 0) {
+            isDoubleBookedSupabase = true;
+          }
+        }
+      } catch (err) {
+        console.warn("Supabase slot check warning:", err);
+      }
+    }
+
+    if (isDoubleBookedMemory || isDoubleBookedHMS || isDoubleBookedSupabase) {
       return NextResponse.json(
         {
-          error: `The ${timeSlot} slot on ${effectiveDate} is already reserved for this specialist. Please choose another available time slot.`,
+          error: "Sorry, this slot is no longer available. Please select another time.",
         },
         { status: 409 }
       );
@@ -260,13 +354,19 @@ export async function POST(req: NextRequest) {
     // 6. Generate Reference & Unique ID & Secure Verification Token
     const referenceCode = generateReferenceCode();
     const appointmentId = `apt-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+    const officialApptId = generateAppointmentId(); // e.g. IND-APT-100001
     const secureToken = verificationToken || `tok_${Math.random().toString(36).substring(2, 10)}${Date.now().toString(36)}`;
+    const patientUhid =
+      req.headers.get("x-patient-uhid") ||
+      `IND-UHID-${(Math.abs(patientPhone.split("").reduce((acc: number, char: string) => (acc << 5) - acc + char.charCodeAt(0), 0)) % 900000) + 100000}`;
 
     const newAppointment: ServerAppointment = {
       id: appointmentId,
+      appointmentId: officialApptId,
       referenceCode,
       verificationToken: secureToken,
       patientId: patientId || userId || undefined,
+      patientUhid,
       patientName: patientName.trim(),
       patientPhone: patientPhone.trim(),
       patientEmail: patientEmail ? patientEmail.trim() : "",
@@ -277,16 +377,44 @@ export async function POST(req: NextRequest) {
       targetName: effectiveTargetName,
       doctorId: effectiveDoctorId,
       doctorName: doctorName || (effectiveDoctorId ? DOCTORS.find((d) => d.id === effectiveDoctorId)?.name : undefined),
+      departmentId: effectiveDoctorId ? DOCTORS.find((d) => d.id === effectiveDoctorId)?.departmentId : "general",
       date: effectiveDate,
       timeSlot,
       notes: notes ? notes.trim() : "",
-      status: "confirmed",
+      status: "CONFIRMED",
       createdAt: new Date().toISOString(),
       paymentStatus: paymentStatus === "paid_online" ? "paid_online" : "pay_on_arrival",
     };
 
-    // 7. Save into Persistent Server Registry
+    // 7. Save into Persistent Server Registries
     existing.unshift(newAppointment);
+
+    HMSService.createAppointment({
+      id: newAppointment.id,
+      appointmentId: officialApptId,
+      referenceCode: referenceCode,
+      verificationToken: secureToken,
+      patientId: newAppointment.patientId || patientUhid,
+      patientUhid,
+      patientName: newAppointment.patientName,
+      patientPhone: newAppointment.patientPhone,
+      patientEmail: newAppointment.patientEmail,
+      patientAge: newAppointment.patientAge,
+      patientGender: newAppointment.patientGender,
+      serviceType: newAppointment.serviceType,
+      targetId: newAppointment.targetId,
+      targetName: newAppointment.targetName,
+      doctorId: newAppointment.doctorId,
+      doctorName: newAppointment.doctorName,
+      departmentId: newAppointment.departmentId || "general",
+      departmentName: effectiveTargetName,
+      appointmentDate: newAppointment.date,
+      timeSlot: newAppointment.timeSlot,
+      status: "CONFIRMED",
+      paymentStatus: newAppointment.paymentStatus,
+      notes: newAppointment.notes,
+      qrVerified: false,
+    });
 
     // 8. Sync with Supabase if configured
     if (isSupabaseConfigured()) {
@@ -298,6 +426,8 @@ export async function POST(req: NextRequest) {
 
           await admin.from("appointments").insert({
             reference_code: referenceCode,
+            appointment_id: officialApptId,
+            patient_uhid: patientUhid,
             verification_token: newAppointment.verificationToken,
             patient_id: isValidUuid(newAppointment.patientId) ? newAppointment.patientId : null,
             patient_name: newAppointment.patientName,
@@ -313,7 +443,7 @@ export async function POST(req: NextRequest) {
             appointment_date: newAppointment.date,
             time_slot: newAppointment.timeSlot,
             notes: newAppointment.notes,
-            status: newAppointment.status,
+            status: "CONFIRMED",
             payment_status: newAppointment.paymentStatus,
           });
         }

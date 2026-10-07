@@ -20,8 +20,18 @@ export function generateStaticParams() {
   }));
 }
 
+const findDoctor = (id: string) => {
+  const norm = id.toLowerCase();
+  return (
+    DOCTORS.find((d) => d.id.toLowerCase() === norm) ||
+    DOCTORS.find((d) => d.id.toLowerCase() === `dr-${norm}`) ||
+    DOCTORS.find((d) => d.id.replace(/^dr-/, "").toLowerCase() === norm.replace(/^dr-/, "")) ||
+    (id === "doc-1" ? DOCTORS[0] : undefined)
+  );
+};
+
 export function generateMetadata({ params }: DoctorPageProps): Metadata {
-  const doctor = DOCTORS.find((d) => d.id === params.id);
+  const doctor = findDoctor(params.id);
   if (!doctor) {
     return { title: "Doctor Not Found | Indo States Health" };
   }
@@ -32,7 +42,7 @@ export function generateMetadata({ params }: DoctorPageProps): Metadata {
 }
 
 export default function DoctorDetailPage({ params }: DoctorPageProps) {
-  const doctor = DOCTORS.find((d) => d.id === params.id);
+  const doctor = findDoctor(params.id);
   if (!doctor) {
     notFound();
   }
