@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { HOSPITAL_INFO, HEALTH_PACKAGES, HealthPackage } from "@/data/hospitalData";
 import { HMSService } from "@/lib/hmsService";
+import { requireServerAuth, ADMIN_ACCESS_ROLES } from "@/lib/serverAuth";
 
 export const dynamic = "force-dynamic";
 
@@ -42,8 +43,16 @@ let websiteContent = {
   },
 };
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: ADMIN_ACCESS_ROLES,
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     return NextResponse.json({ success: true, content: websiteContent });
   } catch (error: any) {
     console.error("API GET /api/admin/website error:", error);
@@ -53,6 +62,14 @@ export async function GET() {
 
 export async function PUT(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: ADMIN_ACCESS_ROLES,
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const body = await req.json();
     const { section, data } = body;
 
@@ -73,9 +90,9 @@ export async function PUT(req: NextRequest) {
     }
 
     HMSService.recordAuditLog(
-      "admin",
-      "Hospital Administrator",
-      "HOSPITAL_ADMIN",
+      auth.staff.id,
+      auth.staff.name,
+      auth.staff.role,
       "website.content_update",
       `website/${section}`,
       { section }
@@ -91,3 +108,4 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "Failed to update website content." }, { status: 500 });
   }
 }
+

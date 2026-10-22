@@ -152,20 +152,75 @@ export const OTPService = {
     recentRequests.push(now);
     rateLimits.set(phone, recentRequests);
 
-    // 5. Try Supabase Auth Phone Provider if configured
-    if (isSupabaseConfigured()) {
+    // 5. External SMS Gateway Dispatch
+    const isProduction = process.env.NODE_ENV === "production";
+    let providerConfigured = false;
+    let providerError: string | null = null;
+
+    // Twilio SMS integration
+    if (
+      process.env.TWILIO_ACCOUNT_SID &&
+      process.env.TWILIO_AUTH_TOKEN &&
+      process.env.TWILIO_PHONE_NUMBER
+    ) {
+      providerConfigured = true;
+      try {
+        const auth = Buffer.from(
+          `${process.env.TWILIO_ACCOUNT_SID}:${process.env.TWILIO_AUTH_TOKEN}`
+        ).toString("base64");
+        const body = new URLSearchParams({
+          To: phone,
+          From: process.env.TWILIO_PHONE_NUMBER,
+          Body: `Your IndoStates Hospital verification code is: ${otpCode}. Valid for 5 minutes. Do not share this code.`,
+        });
+        const twilioRes = await fetch(
+          `https://api.twilio.com/2010-04-01/Accounts/${process.env.TWILIO_ACCOUNT_SID}/Messages.json`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Basic ${auth}`,
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: body.toString(),
+          }
+        );
+        if (!twilioRes.ok) {
+          const errJson: any = await twilioRes.json().catch(() => ({}));
+          providerError = errJson.message || `Twilio SMS dispatch failed with status ${twilioRes.status}`;
+        }
+      } catch (err: any) {
+        providerError = err?.message || "Failed to contact SMS gateway";
+      }
+    } else if (isSupabaseConfigured() && process.env.SUPABASE_SMS_ENABLED === "true") {
+      // Supabase Phone Auth Provider integration
+      providerConfigured = true;
       try {
         const admin = getSupabaseAdmin();
         if (admin) {
-          // Attempt Supabase phone OTP dispatch if SMS provider is set
-          await admin.auth.signInWithOtp({
-            phone,
-          });
+          const { error: sbError } = await admin.auth.signInWithOtp({ phone });
+          if (sbError) {
+            providerError = sbError.message;
+          }
         }
-      } catch (err) {
-        // Fallback gracefully to server-side OTP dispatch
-        console.warn("Supabase phone OTP dispatch notice (using server OTP engine):", err);
+      } catch (err: any) {
+        providerError = err?.message || "Supabase phone OTP dispatch failed";
       }
+    }
+
+    // In production, if no SMS provider is configured, fail clearly rather than falsely claiming delivery
+    if (isProduction && !providerConfigured) {
+      return {
+        success: false,
+        error:
+          "SMS delivery provider is not configured for production OTP dispatch. Please configure Twilio or Supabase SMS credentials in project settings.",
+      };
+    }
+
+    if (isProduction && providerError) {
+      return {
+        success: false,
+        error: `Failed to deliver verification code: ${providerError}`,
+      };
     }
 
     // Record audit log
@@ -178,17 +233,11 @@ export const OTPService = {
       { phone, expiresAt: new Date(expiresAt).toISOString() }
     );
 
-    // In dev / test or local environment without an external SMS hardware provider, return devOtp
-    const isDev =
-      process.env.NODE_ENV !== "production" ||
-      !process.env.TWILIO_AUTH_TOKEN ||
-      process.env.NEXT_PUBLIC_APP_URL?.includes("localhost") ||
-      !process.env.NEXT_PUBLIC_APP_URL;
-
+    // In dev / test / non-production, return devOtp for automated test assertions
     return {
       success: true,
       cooldownSeconds: 60,
-      devOtp: isDev ? otpCode : undefined,
+      devOtp: !isProduction ? otpCode : undefined,
     };
   },
 

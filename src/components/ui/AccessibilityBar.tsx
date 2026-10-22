@@ -90,7 +90,7 @@ export const AccessibilityBar: React.FC = () => {
             }`}
             title="Toggle high contrast mode"
           >
-            <Eye className="w-3.5 h-3.5" />
+            <Eye className="w-3.5 h-3.5" aria-hidden="true" focusable="false" />
             <span>Contrast</span>
           </button>
 
@@ -104,7 +104,7 @@ export const AccessibilityBar: React.FC = () => {
             }`}
             title="Toggle larger typography"
           >
-            <Type className="w-3.5 h-3.5" />
+            <Type className="w-3.5 h-3.5" aria-hidden="true" focusable="false" />
             <span>Text +</span>
           </button>
 
@@ -118,7 +118,7 @@ export const AccessibilityBar: React.FC = () => {
             }`}
             title="Stop dynamic animations"
           >
-            <Pause className="w-3.5 h-3.5" />
+            <Pause className="w-3.5 h-3.5" aria-hidden="true" focusable="false" />
             <span>No Motion</span>
           </button>
 
@@ -128,7 +128,7 @@ export const AccessibilityBar: React.FC = () => {
               className="text-[11px] text-slate-400 hover:text-white underline ml-1 flex items-center gap-1"
               title="Reset accessibility overrides"
             >
-              <RotateCcw className="w-3 h-3" />
+              <RotateCcw className="w-3 h-3" aria-hidden="true" focusable="false" />
               <span>Reset</span>
             </button>
           )}

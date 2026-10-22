@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AdminService } from "@/lib/adminService";
+import { requireServerAuth, ADMIN_ACCESS_ROLES } from "@/lib/serverAuth";
+import { HMSService } from "@/lib/hmsService";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +20,14 @@ const failedQueries = [
 
 export async function GET(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: ADMIN_ACCESS_ROLES,
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const { searchParams } = new URL(req.url);
     const category = searchParams.get("category") || undefined;
 
@@ -43,6 +53,14 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: ADMIN_ACCESS_ROLES,
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const body = await req.json();
     const { id, category, title, content, tags, isActive } = body;
 
@@ -57,8 +75,17 @@ export async function POST(req: NextRequest) {
       content: content.trim(),
       tags: tags || [],
       isActive: isActive !== undefined ? isActive : true,
-      updatedBy: "Hospital Administration",
+      updatedBy: auth.staff.name,
     });
+
+    HMSService.recordAuditLog(
+      auth.staff.id,
+      auth.staff.name,
+      auth.staff.role,
+      "helpdesk.save_knowledge_item",
+      `helpdesk/${item.id}`,
+      { title: item.title, category: item.category }
+    );
 
     return NextResponse.json({
       success: true,
@@ -73,6 +100,14 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: ADMIN_ACCESS_ROLES,
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
 
@@ -85,6 +120,15 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "Item not found." }, { status: 404 });
     }
 
+    HMSService.recordAuditLog(
+      auth.staff.id,
+      auth.staff.name,
+      auth.staff.role,
+      "helpdesk.delete_knowledge_item",
+      `helpdesk/${id}`,
+      { id }
+    );
+
     return NextResponse.json({
       success: true,
       message: "Knowledge base item deleted successfully.",
@@ -94,3 +138,4 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "Failed to delete Help Desk knowledge item." }, { status: 500 });
   }
 }
+

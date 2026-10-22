@@ -1,14 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DoctorService, ConsultationSubmission } from "@/lib/doctorService";
-import { UserRole } from "@/types/hms";
+import { requireServerAuth } from "@/lib/serverAuth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: ["DOCTOR", "DEPARTMENT_HEAD", "MEDICAL_DIRECTOR", "ADMIN", "SUPER_ADMIN", "HOSPITAL_ADMIN"],
+      requiredPermission: "clinical.read",
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const { searchParams } = new URL(req.url);
-    const doctorId = searchParams.get("doctorId") || "dr-logesh-thirumalaisamy";
     const appointmentId = searchParams.get("appointmentId");
+    const requestedDoctorId = searchParams.get("doctorId");
 
     // Check if draft exists for specific appointment
     if (appointmentId) {
@@ -19,7 +28,10 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    const consultations = DoctorService.getDoctorConsultations(doctorId);
+    const isAdminOrDirector = ["ADMIN", "SUPER_ADMIN", "HOSPITAL_ADMIN", "MEDICAL_DIRECTOR"].includes(auth.staff.role);
+    const resolvedDoctorId = isAdminOrDirector && requestedDoctorId ? requestedDoctorId : auth.staff.id;
+
+    const consultations = DoctorService.getDoctorConsultations(resolvedDoctorId);
 
     return NextResponse.json({
       success: true,
@@ -34,6 +46,15 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: ["DOCTOR", "DEPARTMENT_HEAD", "MEDICAL_DIRECTOR", "ADMIN", "SUPER_ADMIN", "HOSPITAL_ADMIN"],
+      requiredPermission: "clinical.write",
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const body = await req.json();
     const consultation = body.consultation || body;
     const action = body.action || (body.status === "draft" ? "draft" : "finalize");
@@ -45,11 +66,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const safeActor = body.actor || {
-      id: consultation.doctorId || "dr-logesh-thirumalaisamy",
-      name: consultation.doctorName || "Dr. Logesh Thirumalaisamy",
-      role: "DOCTOR" as UserRole,
+    // Server-verified actor - cannot be spoofed by client
+    const verifiedActor = {
+      id: auth.staff.id,
+      name: auth.staff.name,
+      role: auth.staff.role,
     };
+
+    // Bind consultation author to the authenticated clinician
+    consultation.doctorId = auth.staff.id;
+    consultation.doctorName = auth.staff.name;
 
     // Action 1: Save Draft
     if (action === "draft") {
@@ -71,7 +97,7 @@ export async function POST(req: NextRequest) {
 
       const result = DoctorService.finalizeConsultation(
         consultation as ConsultationSubmission,
-        safeActor
+        verifiedActor
       );
 
       return NextResponse.json({
@@ -93,3 +119,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to record consultation." }, { status: 500 });
   }
 }
+

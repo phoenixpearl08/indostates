@@ -1,11 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { HMSService } from "@/lib/hmsService";
 import { UserRole } from "@/types/hms";
+import { requireServerAuth, ADMIN_ACCESS_ROLES } from "@/lib/serverAuth";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: [...ADMIN_ACCESS_ROLES, "BILLING_STAFF", "FINANCE_MANAGER"],
+      requiredPermission: "billing.read",
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const invoices = HMSService.getInvoices();
 
     const paidInvoices = invoices.filter((i) => i.paymentStatus === "paid");
@@ -47,14 +57,24 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: [...ADMIN_ACCESS_ROLES, "BILLING_STAFF", "FINANCE_MANAGER"],
+      requiredPermission: "billing.write",
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const body = await req.json();
     const { action } = body;
 
     const actor = {
-      id: "admin",
-      name: "Patient Accounts Officer",
-      role: "HOSPITAL_ADMIN" as UserRole,
+      id: auth.staff.id,
+      name: auth.staff.name,
+      role: auth.staff.role as UserRole,
     };
+
 
     if (action === "record_payment") {
       const { invoiceId, paymentMethod, transactionReference } = body;

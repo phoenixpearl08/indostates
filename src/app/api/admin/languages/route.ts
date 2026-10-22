@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { TRANSLATIONS, Language } from "@/data/translations";
+import { requireServerAuth, ADMIN_ACCESS_ROLES } from "@/lib/serverAuth";
+import { HMSService } from "@/lib/hmsService";
 
 export const dynamic = "force-dynamic";
 
@@ -25,8 +27,16 @@ function countLeafKeys(obj: any): number {
   return count;
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: ADMIN_ACCESS_ROLES,
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const enTotal = countLeafKeys((TRANSLATIONS as any).en || {});
 
     const languageStats = SUPPORTED_LANGUAGES.map((lang) => {
@@ -54,6 +64,14 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: ADMIN_ACCESS_ROLES,
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const body = await req.json();
     const { langCode, key, value } = body;
 
@@ -75,6 +93,15 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    HMSService.recordAuditLog(
+      auth.staff.id,
+      auth.staff.name,
+      auth.staff.role,
+      "language.update_translation",
+      `languages/${langCode}/${key}`,
+      { langCode, key }
+    );
+
     return NextResponse.json({
       success: true,
       message: `Translation for key "${key}" in language "${langCode}" updated.`,
@@ -84,3 +111,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to update translation key." }, { status: 500 });
   }
 }
+

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { DOCTORS, Doctor } from "@/data/hospitalData";
 import { HMSService } from "@/lib/hmsService";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
+import { requireServerAuth, ADMIN_ACCESS_ROLES } from "@/lib/serverAuth";
 
 export const dynamic = "force-dynamic";
 
@@ -9,8 +10,16 @@ type AdminDoctor = Doctor & { isActive?: boolean };
 
 let dynamicDoctors: AdminDoctor[] = [...DOCTORS].map((d) => ({ ...d, isActive: true }));
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: [...ADMIN_ACCESS_ROLES, "RECEPTIONIST"],
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const appointments = HMSService.getAppointments();
 
     const doctorsWithStats = dynamicDoctors.map((doc) => {
@@ -41,6 +50,15 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: ADMIN_ACCESS_ROLES,
+      requiredPermission: "doctor.manage",
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const body = await req.json();
     const { name, qualifications, specialization, departmentId, timing, availableDays, languages, biography, experienceYears } = body;
 
@@ -93,9 +111,9 @@ export async function POST(req: NextRequest) {
     }
 
     HMSService.recordAuditLog(
-      "admin",
-      "Hospital Administrator",
-      "HOSPITAL_ADMIN",
+      auth.staff.id,
+      auth.staff.name,
+      auth.staff.role,
       "doctor.create",
       `doctors/${newDoc.id}`,
       { name: newDoc.name, departmentId: newDoc.departmentId }
@@ -114,6 +132,15 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: ADMIN_ACCESS_ROLES,
+      requiredPermission: "doctor.manage",
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const body = await req.json();
     const { id, isActive, timing, availableDays, biography, qualifications, specialization, departmentId } = body;
 
@@ -157,9 +184,9 @@ export async function PUT(req: NextRequest) {
     }
 
     HMSService.recordAuditLog(
-      "admin",
-      "Hospital Administrator",
-      "HOSPITAL_ADMIN",
+      auth.staff.id,
+      auth.staff.name,
+      auth.staff.role,
       "doctor.update",
       `doctors/${id}`,
       { id, updatedFields: Object.keys(body).filter((k) => k !== "id") }
@@ -175,3 +202,4 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "Failed to update doctor." }, { status: 500 });
   }
 }
+

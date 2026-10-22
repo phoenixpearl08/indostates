@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { DEPARTMENTS, Department, DOCTORS } from "@/data/hospitalData";
 import { HMSService } from "@/lib/hmsService";
 import { AdminService } from "@/lib/adminService";
+import { requireServerAuth, ADMIN_ACCESS_ROLES } from "@/lib/serverAuth";
 
 export const dynamic = "force-dynamic";
 
@@ -11,8 +12,16 @@ let dynamicDepartments: (Department & { head?: string; status?: "active" | "inac
   status: "active",
 }));
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: ADMIN_ACCESS_ROLES,
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const appointments = HMSService.getAppointments();
     const staff = AdminService.getStaff();
 
@@ -42,6 +51,15 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: ADMIN_ACCESS_ROLES,
+      requiredPermission: "department.manage",
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const body = await req.json();
     const { name, head, description, services } = body;
 
@@ -67,9 +85,9 @@ export async function POST(req: NextRequest) {
     dynamicDepartments.unshift(newDept as any);
 
     HMSService.recordAuditLog(
-      "admin",
-      "Hospital Administrator",
-      "HOSPITAL_ADMIN",
+      auth.staff.id,
+      auth.staff.name,
+      auth.staff.role,
       "department.create",
       `departments/${slug}`,
       { name: newDept.name, head: newDept.head }
@@ -88,6 +106,15 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: ADMIN_ACCESS_ROLES,
+      requiredPermission: "department.manage",
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const body = await req.json();
     const { id, name, head, description, status, services } = body;
 
@@ -110,9 +137,9 @@ export async function PUT(req: NextRequest) {
     if (services) dynamicDepartments[index].keyServices = services;
 
     HMSService.recordAuditLog(
-      "admin",
-      "Hospital Administrator",
-      "HOSPITAL_ADMIN",
+      auth.staff.id,
+      auth.staff.name,
+      auth.staff.role,
       "department.update",
       `departments/${id}`,
       { id, updatedFields: Object.keys(body).filter((k) => k !== "id") }
@@ -128,3 +155,4 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "Failed to update department." }, { status: 500 });
   }
 }
+

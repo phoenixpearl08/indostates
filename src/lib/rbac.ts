@@ -54,6 +54,36 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "nurse.manage",
     "security.manage",
   ],
+  ADMIN: [
+    "appointment.read",
+    "appointment.create",
+    "appointment.update",
+    "appointment.cancel",
+    "appointment.checkin",
+    "patient.read",
+    "patient.update",
+    "clinical.read",
+    "prescription.read",
+    "lab.read",
+    "imaging.read",
+    "billing.read",
+    "billing.write",
+    "finance.reconcile",
+    "ipd.read",
+    "ipd.write",
+    "bed.manage",
+    "emergency.read",
+    "ambulance.read",
+    "housekeeping.manage",
+    "maintenance.manage",
+    "staff.manage",
+    "doctor.manage",
+    "department.manage",
+    "audit.read",
+    "queue.manage",
+    "nurse.manage",
+    "security.manage",
+  ],
   HOSPITAL_ADMIN: [
     "appointment.read",
     "appointment.create",
@@ -272,6 +302,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
 };
 
 export const ROLE_LABELS: Record<UserRole, string> = {
+  ADMIN: "Hospital Administrator",
   SUPER_ADMIN: "Super Administrator",
   HOSPITAL_ADMIN: "Hospital Administrator",
   MEDICAL_DIRECTOR: "Medical Director",
@@ -298,6 +329,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
 };
 
 export const ROLE_DASHBOARDS: Record<UserRole, string> = {
+  ADMIN: "/admin/dashboard",
   SUPER_ADMIN: "/admin/dashboard",
   HOSPITAL_ADMIN: "/admin/dashboard",
   MEDICAL_DIRECTOR: "/admin/dashboard",

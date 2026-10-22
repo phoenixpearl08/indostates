@@ -1,6 +1,6 @@
 import { getSupabaseAdmin, isSupabaseConfigured } from "./supabase";
 import { UserRole } from "@/types/hms";
-import { VERIFIED_STAFF_ACCOUNTS } from "./serverAuth";
+import { VERIFIED_STAFF_ACCOUNTS, signStaffToken } from "./serverAuth";
 
 export type StaffRole =
   | "DOCTOR"
@@ -264,8 +264,19 @@ export class StaffAuthService {
       };
     }
 
-    // 5. Generate secure token
-    staffProfile.token = `ish-stf-sig-${Buffer.from(normalizedEmail + ":" + Date.now()).toString("base64")}`;
+    // 5. Generate secure cryptographic token
+    staffProfile.token = signStaffToken({
+      sessionId: `sess_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+      id: staffProfile.id,
+      employee_id: staffProfile.employee_id,
+      name: staffProfile.full_name,
+      email: staffProfile.email,
+      role: staffProfile.role as UserRole,
+      department: staffProfile.department,
+      specialization: staffProfile.specialization,
+      issuedAt: Date.now(),
+      expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
+    });
 
     const redirectUrl = this.getDashboardRoute(staffProfile.role);
 

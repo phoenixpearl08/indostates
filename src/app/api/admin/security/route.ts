@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AdminService } from "@/lib/adminService";
+import { requireServerAuth, revokeSession, revokeStaffSessions } from "@/lib/serverAuth";
+import { HMSService } from "@/lib/hmsService";
 
 export const dynamic = "force-dynamic";
 
@@ -11,8 +13,17 @@ let securityPolicies = {
   ipAllowlistEnabled: false,
 };
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: ["SUPER_ADMIN", "ADMIN", "HOSPITAL_ADMIN"],
+      requiredPermission: "security.manage",
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const events = AdminService.getSecurityEvents();
     const activeSessions = [
       { id: "sess-1", user: "admin@indostates.com", role: "HOSPITAL_ADMIN", ip: "192.168.1.10", client: "Chrome / Windows 11", loginTime: new Date(Date.now() - 1000 * 60 * 30).toISOString(), status: "active" },
@@ -28,6 +39,7 @@ export async function GET() {
       activeSessions,
       failedLoginsCount,
       policies: securityPolicies,
+      viewer: auth.staff.role,
     });
   } catch (error: any) {
     console.error("API GET /api/admin/security error:", error);
@@ -37,12 +49,31 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: ["SUPER_ADMIN", "ADMIN", "HOSPITAL_ADMIN"],
+      requiredPermission: "security.manage",
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const body = await req.json();
     const { action } = body;
 
     if (action === "update_policies") {
       const { policies } = body;
       securityPolicies = { ...securityPolicies, ...policies };
+
+      HMSService.recordAuditLog(
+        auth.staff.id,
+        auth.staff.name,
+        auth.staff.role,
+        "security.update_policies",
+        "settings/security",
+        { policies: securityPolicies }
+      );
+
       return NextResponse.json({
         success: true,
         message: "Hospital security policies updated.",
@@ -51,10 +82,37 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === "revoke_session") {
-      const { sessionId } = body;
+      const { sessionId, email } = body;
+      if (sessionId) {
+        revokeSession(sessionId);
+      }
+      if (email) {
+        revokeStaffSessions(email);
+      }
+
+      HMSService.recordAuditLog(
+        auth.staff.id,
+        auth.staff.name,
+        auth.staff.role,
+        "security.revoke_session",
+        `sessions/${sessionId || email}`,
+        { sessionId, email }
+      );
+
       return NextResponse.json({
         success: true,
-        message: `Session ${sessionId} revoked immediately.`,
+        message: `Session ${sessionId || email} revoked immediately.`,
+      });
+    }
+
+    if (action === "revoke_staff_all") {
+      const { email } = body;
+      if (email) {
+        revokeStaffSessions(email);
+      }
+      return NextResponse.json({
+        success: true,
+        message: `All sessions for ${email} revoked immediately.`,
       });
     }
 
@@ -64,3 +122,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to process security action." }, { status: 500 });
   }
 }
+

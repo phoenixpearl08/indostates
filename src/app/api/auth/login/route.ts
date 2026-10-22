@@ -66,6 +66,16 @@ export async function POST(req: NextRequest) {
       path: "/",
     });
 
+    if (user.token && !["PATIENT", "ATTENDER", "ATTENDER_CAREGIVER"].includes((user.role || "").toUpperCase())) {
+      response.cookies.set("ish_staff_token", user.token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 7,
+        path: "/",
+      });
+    }
+
     return response;
   } catch (error: any) {
     console.error("API /api/auth/login error:", error);

@@ -40,3 +40,7 @@ Thumbs.db
 .vscode/
 .idea/
 *.tsbuildinfo
+
+# Local scratch & diagnostics
+scripts/diagnose-*.ps1
+scripts/test-css.js

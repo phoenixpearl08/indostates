@@ -1,11 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { HMSService } from "@/lib/hmsService";
 import { DOCTORS, DEPARTMENTS } from "@/data/hospitalData";
+import { requireServerAuth, ADMIN_ACCESS_ROLES } from "@/lib/serverAuth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: ADMIN_ACCESS_ROLES,
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const { searchParams } = new URL(req.url);
     const category = searchParams.get("category") || "overview";
     const format = searchParams.get("format");

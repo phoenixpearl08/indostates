@@ -81,13 +81,13 @@ function DoctorDashboardContent() {
         setIsAuthChecking(false);
         return;
       }
-      router.replace("/login?role=doctor");
+      router.replace("/staff/login?role=doctor&redirect=/doctor/dashboard");
       return;
     }
 
     const normalizedRole = (currentSession.role || "").toUpperCase();
     if (!["DOCTOR", "DEPARTMENT_HEAD", "MEDICAL_DIRECTOR", "SUPER_ADMIN", "HOSPITAL_ADMIN", "ADMIN"].includes(normalizedRole)) {
-      router.replace("/login?role=doctor");
+      router.replace("/staff/login?role=doctor&redirect=/doctor/dashboard");
       return;
     }
 
@@ -102,6 +102,7 @@ function DoctorDashboardContent() {
     }
     setIsAuthChecking(false);
   }, [router]);
+
 
   // Fetch real overview stats and queue
   const loadDashboardData = async () => {

@@ -47,17 +47,18 @@ export default function ReceptionDashboardPage() {
     const s = HospitalStore.getSession();
     const authorized = ["RECEPTIONIST", "SUPER_ADMIN", "HOSPITAL_ADMIN", "OPERATIONS_MANAGER"];
     if (!s) {
-      window.location.href = "/login?redirect=/reception/dashboard";
+      window.location.href = "/staff/login?redirect=/reception/dashboard";
       return;
     }
     if (!authorized.includes((s.role || "").toUpperCase())) {
-      window.location.href = "/login?error=unauthorized_role";
+      window.location.href = "/staff/login?error=unauthorized_role";
       return;
     }
     setSession(s);
     setIsAuthChecking(false);
     fetchData();
   }, []);
+
 
   const fetchData = async () => {
     try {

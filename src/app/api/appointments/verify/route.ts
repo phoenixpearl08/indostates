@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
-    const code = searchParams.get("code") || searchParams.get("referenceCode");
+    const code = searchParams.get("code") || searchParams.get("referenceCode") || searchParams.get("ref");
     const token = searchParams.get("token");
 
     const queryKey = id || code || token;

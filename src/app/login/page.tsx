@@ -108,6 +108,7 @@ function LoginForm() {
       ATTENDER_CAREGIVER: "/patient/dashboard",
       DOCTOR: "/doctor/dashboard",
       DEPARTMENT_HEAD: "/doctor/dashboard",
+      ADMIN: "/admin/dashboard",
       SUPER_ADMIN: "/admin/dashboard",
       HOSPITAL_ADMIN: "/admin/dashboard",
       MEDICAL_DIRECTOR: "/admin/dashboard",
@@ -131,13 +132,13 @@ function LoginForm() {
     if (!requestedRedirect) return defaultTarget;
 
     // Check if the requested redirect is authorized for this role
-    if (requestedRedirect.startsWith("/admin") && !["SUPER_ADMIN", "HOSPITAL_ADMIN", "MEDICAL_DIRECTOR", "OPERATIONS_MANAGER", "HR_MANAGER"].includes(role)) {
+    if (requestedRedirect.startsWith("/admin") && !["ADMIN", "SUPER_ADMIN", "HOSPITAL_ADMIN", "MEDICAL_DIRECTOR", "OPERATIONS_MANAGER", "HR_MANAGER"].includes(role)) {
       return defaultTarget;
     }
-    if (requestedRedirect.startsWith("/doctor") && !["DOCTOR", "DEPARTMENT_HEAD", "MEDICAL_DIRECTOR", "SUPER_ADMIN", "HOSPITAL_ADMIN"].includes(role)) {
+    if (requestedRedirect.startsWith("/doctor") && !["DOCTOR", "DEPARTMENT_HEAD", "MEDICAL_DIRECTOR", "ADMIN", "SUPER_ADMIN", "HOSPITAL_ADMIN"].includes(role)) {
       return defaultTarget;
     }
-    if (requestedRedirect.startsWith("/patient") && !["PATIENT", "ATTENDER", "ATTENDER_CAREGIVER", "SUPER_ADMIN", "HOSPITAL_ADMIN"].includes(role)) {
+    if (requestedRedirect.startsWith("/patient") && !["PATIENT", "ATTENDER", "ATTENDER_CAREGIVER", "ADMIN", "SUPER_ADMIN", "HOSPITAL_ADMIN"].includes(role)) {
       return defaultTarget;
     }
 

@@ -1,16 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DoctorService } from "@/lib/doctorService";
 import { HMSService } from "@/lib/hmsService";
-import { UserRole } from "@/types/hms";
+import { requireServerAuth } from "@/lib/serverAuth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const doctorId = searchParams.get("doctorId") || "dr-logesh-thirumalaisamy";
+    const auth = await requireServerAuth(req, {
+      allowedRoles: ["DOCTOR", "DEPARTMENT_HEAD", "MEDICAL_DIRECTOR", "ADMIN", "SUPER_ADMIN", "HOSPITAL_ADMIN", "LAB_TECHNICIAN", "LAB_VERIFIER", "NURSE"],
+      requiredPermission: "lab.read",
+    });
 
-    const labOrders = DoctorService.getDoctorLabOrders(doctorId);
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
+    const { searchParams } = new URL(req.url);
+    const requestedDoctorId = searchParams.get("doctorId");
+
+    const isAdminOrStaff = ["ADMIN", "SUPER_ADMIN", "HOSPITAL_ADMIN", "MEDICAL_DIRECTOR", "LAB_TECHNICIAN", "LAB_VERIFIER", "NURSE"].includes(auth.staff.role);
+    const resolvedDoctorId = isAdminOrStaff && requestedDoctorId ? requestedDoctorId : auth.staff.id;
+
+    const labOrders = DoctorService.getDoctorLabOrders(resolvedDoctorId);
 
     return NextResponse.json({
       success: true,
@@ -27,8 +39,17 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: ["DOCTOR", "DEPARTMENT_HEAD", "MEDICAL_DIRECTOR", "ADMIN", "SUPER_ADMIN", "HOSPITAL_ADMIN"],
+      requiredPermission: "lab.write",
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const body = await req.json();
-    const { appointmentId, patientId, testName, priority, clinicalIndication, sampleType, actor } = body;
+    const { appointmentId, patientId, testName, priority, clinicalIndication, sampleType } = body;
 
     if (!appointmentId || !patientId || !testName) {
       return NextResponse.json(
@@ -37,10 +58,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const safeActor = actor || {
-      id: "dr-logesh-thirumalaisamy",
-      name: "Dr. Logesh Thirumalaisamy",
-      role: "DOCTOR" as UserRole,
+    // Verified actor from authenticated session
+    const verifiedActor = {
+      id: auth.staff.id,
+      name: auth.staff.name,
+      role: auth.staff.role,
     };
 
     const patient = HMSService.getPatientById(patientId) || HMSService.getPatientByUhid(patientId);
@@ -51,15 +73,15 @@ export async function POST(req: NextRequest) {
         patientId,
         patientUhid: patient?.uhid || patientId,
         patientName: patient?.fullName || "OPD Patient",
-        doctorId: safeActor.id,
-        doctorName: safeActor.name,
+        doctorId: verifiedActor.id,
+        doctorName: verifiedActor.name,
         testCode: `TEST-${Math.floor(100 + Math.random() * 900)}`,
         testName: testName.trim(),
         sampleType: sampleType || "Blood / Serum",
         sampleStatus: "ordered",
         isReportReleased: false,
       },
-      safeActor
+      verifiedActor
     );
 
     return NextResponse.json({
@@ -72,3 +94,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to create lab order." }, { status: 500 });
   }
 }
+

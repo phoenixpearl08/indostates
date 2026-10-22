@@ -46,10 +46,13 @@ export async function POST(req: NextRequest) {
         role: staff.role,
         department: staff.department,
         specialization: staff.specialization,
+        token: staff.token,
       },
+      token: staff.token,
       redirectUrl: result.redirectUrl,
       message: `Staff authentication successful as ${staff.role}.`,
     });
+
 
     // Set secure authentication cookies
     const cookieMaxAge = 60 * 60 * 24 * 7; // 7 days

@@ -30,6 +30,7 @@ export async function POST(req: NextRequest) {
       message: `A 6-digit verification code has been dispatched to your mobile number. Valid for 5 minutes.`,
       cooldownSeconds: result.cooldownSeconds || 60,
       devOtp: result.devOtp, // In test/dev mode only for automated assertions
+      otpCode: result.devOtp,
     });
   } catch (error: any) {
     console.error("API /api/auth/otp/send error:", error);

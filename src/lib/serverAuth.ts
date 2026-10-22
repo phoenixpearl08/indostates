@@ -1,5 +1,8 @@
+import crypto from "crypto";
+import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin, isSupabaseConfigured } from "./supabase";
-import { UserRole } from "@/types/hms";
+import { UserRole, Permission } from "@/types/hms";
+import { hasPermission } from "./rbac";
 import { HMSService } from "./hmsService";
 
 export interface AuthUser {
@@ -12,6 +15,35 @@ export interface AuthUser {
   specialization?: string;
   token?: string;
 }
+
+export interface StaffTokenPayload {
+  sessionId: string;
+  id: string;
+  employee_id?: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  department?: string;
+  specialization?: string;
+  issuedAt: number;
+  expiresAt: number;
+}
+
+export interface ServerAuthResult {
+  authorized: boolean;
+  staff?: StaffTokenPayload;
+  error?: string;
+  response?: NextResponse;
+}
+
+export const ADMIN_ACCESS_ROLES: UserRole[] = [
+  "SUPER_ADMIN",
+  "ADMIN",
+  "HOSPITAL_ADMIN",
+  "MEDICAL_DIRECTOR",
+  "OPERATIONS_MANAGER",
+  "HR_MANAGER",
+];
 
 // Hospital Verified Staff Database across all 15 roles
 export const VERIFIED_STAFF_ACCOUNTS: Record<
@@ -307,15 +339,27 @@ export async function verifyUserCredentials(
   const staff = VERIFIED_STAFF_ACCOUNTS[normalizedEmail];
   if (staff) {
     if (pass === staff.passwordHash) {
+      const staffId = `usr-${normalizedEmail.replace(/[^a-z0-9]/g, "-")}`;
+      const signedStaffToken = signStaffToken({
+        sessionId: `sess_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+        id: staffId,
+        name: staff.name,
+        email: normalizedEmail,
+        role: staff.role,
+        department: staff.department,
+        issuedAt: Date.now(),
+        expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
+      });
+
       return {
         user: {
-          id: `usr-${normalizedEmail.replace(/[^a-z0-9]/g, "-")}`,
+          id: staffId,
           name: staff.name,
           email: normalizedEmail,
           role: staff.role,
           uhid: staff.uhid,
           department: staff.department,
-          token: `ish-${staff.role.toLowerCase()}-sig-${Buffer.from(normalizedEmail).toString("base64")}`,
+          token: signedStaffToken,
         },
       };
     } else {
@@ -391,4 +435,226 @@ export async function verifyUserCredentials(
   }
 
   return { user: null, error: "No account found with this email. Please create a patient account or use mobile OTP." };
+}
+
+// ==============================================================================
+// ENTERPRISE CRYPTOGRAPHIC STAFF SESSION & SERVER AUTHORIZATION ENGINE
+// ==============================================================================
+
+const STAFF_AUTH_SECRET =
+  process.env.STAFF_AUTH_SECRET ||
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  "indostates_secure_staff_hmac_secret_key_2026_enterprise_production";
+
+/**
+ * Sign a staff token using HMAC SHA-256
+ */
+export function signStaffToken(payload: StaffTokenPayload): string {
+  const json = JSON.stringify(payload);
+  const dataB64 = Buffer.from(json, "utf-8").toString("base64url");
+  const signature = crypto
+    .createHmac("sha256", STAFF_AUTH_SECRET)
+    .update(dataB64)
+    .digest("base64url");
+  return `${dataB64}.${signature}`;
+}
+
+/**
+ * Verify a cryptographic staff token
+ */
+export function verifyStaffToken(token: string): StaffTokenPayload | null {
+  if (!token || typeof token !== "string" || !token.includes(".")) {
+    return null;
+  }
+  const parts = token.split(".");
+  if (parts.length !== 2) {
+    return null;
+  }
+  const [dataB64, signature] = parts;
+  try {
+    const expectedSignature = crypto
+      .createHmac("sha256", STAFF_AUTH_SECRET)
+      .update(dataB64)
+      .digest("base64url");
+
+    const sigBuf = Buffer.from(signature);
+    const expBuf = Buffer.from(expectedSignature);
+    if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+      return null;
+    }
+
+    const json = Buffer.from(dataB64, "base64url").toString("utf-8");
+    const payload = JSON.parse(json) as StaffTokenPayload;
+
+    if (!payload.expiresAt || payload.expiresAt <= Date.now()) {
+      return null;
+    }
+
+    if (isSessionRevoked(payload.sessionId, payload.email, payload.issuedAt)) {
+      return null;
+    }
+
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+// Session Revocation Store
+declare global {
+  // eslint-disable-next-line no-var
+  var __ISH_REVOKED_SESSIONS__: Set<string> | undefined;
+  // eslint-disable-next-line no-var
+  var __ISH_REVOKED_USERS_TIMESTAMP__: Map<string, number> | undefined;
+}
+
+export function revokeSession(sessionId: string): void {
+  if (!global.__ISH_REVOKED_SESSIONS__) {
+    global.__ISH_REVOKED_SESSIONS__ = new Set();
+  }
+  global.__ISH_REVOKED_SESSIONS__.add(sessionId);
+}
+
+export function revokeStaffSessions(emailOrId: string): void {
+  const key = emailOrId.toLowerCase().trim();
+  if (!global.__ISH_REVOKED_USERS_TIMESTAMP__) {
+    global.__ISH_REVOKED_USERS_TIMESTAMP__ = new Map();
+  }
+  global.__ISH_REVOKED_USERS_TIMESTAMP__.set(key, Date.now());
+}
+
+export function isSessionRevoked(sessionId: string, emailOrId: string, issuedAt: number): boolean {
+  if (global.__ISH_REVOKED_SESSIONS__?.has(sessionId)) {
+    return true;
+  }
+  if (global.__ISH_REVOKED_USERS_TIMESTAMP__) {
+    const revTime = global.__ISH_REVOKED_USERS_TIMESTAMP__.get(emailOrId.toLowerCase().trim());
+    if (revTime && issuedAt <= revTime) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Check whether a staff account is currently ACTIVE
+ */
+export async function isStaffActive(email: string, id?: string): Promise<boolean> {
+  const normEmail = email.toLowerCase().trim();
+
+  // 1. Supabase check if configured
+  if (isSupabaseConfigured()) {
+    try {
+      const admin = getSupabaseAdmin();
+      if (admin) {
+        const { data } = await admin
+          .from("staff_profiles")
+          .select("status")
+          .eq("email", normEmail)
+          .single();
+        if (data) {
+          return data.status === "ACTIVE";
+        }
+      }
+    } catch (e) {
+      console.warn("Supabase staff active check notice:", e);
+    }
+  }
+
+  // 2. In-memory check
+  const staffMembers = typeof (HMSService as any).getStaff === "function" ? (HMSService as any).getStaff() : [];
+  const found = staffMembers.find((s: any) => s.email?.toLowerCase() === normEmail || (id && s.id === id));
+  if (found && (found.status === "suspended" || found.status === "inactive" || found.status === "INACTIVE" || found.status === "SUSPENDED")) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Server-side authorization helper for sensitive API routes
+ * Enforces cryptographic token check, active status, and role/permission authorization.
+ */
+export async function requireServerAuth(
+  req: NextRequest,
+  options?: {
+    allowedRoles?: (UserRole | string)[];
+    requiredPermission?: Permission;
+  }
+): Promise<ServerAuthResult> {
+  // Extract token from cookie or Authorization header
+  const cookieToken = req.cookies.get("ish_staff_token")?.value;
+  const headerToken = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
+  const token = cookieToken || headerToken;
+
+  if (!token) {
+    return {
+      authorized: false,
+      error: "Authentication required. Please sign in to the hospital staff portal.",
+      response: NextResponse.json(
+        { error: "Authentication required. Please sign in to the hospital staff portal." },
+        { status: 401 }
+      ),
+    };
+  }
+
+  const payload = verifyStaffToken(token);
+  if (!payload) {
+    return {
+      authorized: false,
+      error: "Invalid or expired staff session. Please sign in again.",
+      response: NextResponse.json(
+        { error: "Invalid or expired staff session. Please sign in again." },
+        { status: 401 }
+      ),
+    };
+  }
+
+  const active = await isStaffActive(payload.email, payload.id);
+  if (!active) {
+    revokeSession(payload.sessionId);
+    return {
+      authorized: false,
+      error: "Your staff account has been deactivated. Please contact hospital administration.",
+      response: NextResponse.json(
+        { error: "Your staff account has been deactivated. Please contact hospital administration." },
+        { status: 401 }
+      ),
+    };
+  }
+
+  if (options?.allowedRoles && options.allowedRoles.length > 0) {
+    const normUserRole = (payload.role || "").toUpperCase();
+    const normalizedAllowed = options.allowedRoles.map((r) => r.toUpperCase());
+    if (!normalizedAllowed.includes(normUserRole)) {
+      return {
+        authorized: false,
+        staff: payload,
+        error: `Access denied. Role ${payload.role} does not have access to this resource.`,
+        response: NextResponse.json(
+          { error: `Access denied. Role ${payload.role} does not have access to this resource.` },
+          { status: 403 }
+        ),
+      };
+    }
+  }
+
+  if (options?.requiredPermission) {
+    if (!hasPermission(payload.role, options.requiredPermission)) {
+      return {
+        authorized: false,
+        staff: payload,
+        error: `Access denied. Missing required permission: ${options.requiredPermission}.`,
+        response: NextResponse.json(
+          { error: `Access denied. Missing required permission: ${options.requiredPermission}.` },
+          { status: 403 }
+        ),
+      };
+    }
+  }
+
+  return {
+    authorized: true,
+    staff: payload,
+  };
 }

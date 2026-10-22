@@ -1,10 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AdminService } from "@/lib/adminService";
+import { requireServerAuth, ADMIN_ACCESS_ROLES } from "@/lib/serverAuth";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: ADMIN_ACCESS_ROLES,
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const data = AdminService.getSearchAnalytics();
     return NextResponse.json({ success: true, ...data });
   } catch (error: any) {
@@ -15,6 +24,14 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: ADMIN_ACCESS_ROLES,
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const body = await req.json();
     const { action, query, category, resultsCount } = body;
 
@@ -43,3 +60,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to process search management action." }, { status: 500 });
   }
 }
+

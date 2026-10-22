@@ -1,17 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DoctorService } from "@/lib/doctorService";
 import { HMSService } from "@/lib/hmsService";
+import { requireServerAuth } from "@/lib/serverAuth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: ["DOCTOR", "DEPARTMENT_HEAD", "MEDICAL_DIRECTOR", "ADMIN", "SUPER_ADMIN", "HOSPITAL_ADMIN", "NURSE"],
+      requiredPermission: "clinical.read",
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const { searchParams } = new URL(req.url);
     const query = searchParams.get("query") || searchParams.get("q");
     const uhid = searchParams.get("uhid") || searchParams.get("patientId") || searchParams.get("id");
-    const doctorId = searchParams.get("doctorId") || "dr-logesh-thirumalaisamy";
+    const requestedDoctorId = searchParams.get("doctorId");
 
-    // If a specific patient UHID/ID is requested, return their complete clinical dossier
+    const isAdminOrDirector = ["ADMIN", "SUPER_ADMIN", "HOSPITAL_ADMIN", "MEDICAL_DIRECTOR"].includes(auth.staff.role);
+    const resolvedDoctorId = isAdminOrDirector && requestedDoctorId ? requestedDoctorId : auth.staff.id;
+
+    // If a specific patient UHID/ID is requested, return their clinical summary
     if (uhid) {
       const summary = DoctorService.getPatientClinicalSummary(uhid);
       if (!summary) {
@@ -23,8 +36,8 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Search or list patients
-    const patients = DoctorService.searchAuthorizedPatients(query || "", doctorId);
+    // Search patients scoped to authorized access
+    const patients = DoctorService.searchAuthorizedPatients(query || "", resolvedDoctorId);
 
     // Enrich patients with their latest appointment and encounter status
     const allAppointments = HMSService.getAppointments();
@@ -50,3 +63,4 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Failed to fetch patient records." }, { status: 500 });
   }
 }
+

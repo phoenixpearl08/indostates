@@ -5,6 +5,7 @@
 // ==============================================================================
 
 export type UserRole =
+  | "ADMIN"
   | "SUPER_ADMIN"
   | "HOSPITAL_ADMIN"
   | "MEDICAL_DIRECTOR"

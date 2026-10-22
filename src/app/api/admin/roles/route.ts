@@ -1,10 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AdminService } from "@/lib/adminService";
+import { requireServerAuth } from "@/lib/serverAuth";
+import { HMSService } from "@/lib/hmsService";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: ["SUPER_ADMIN", "ADMIN", "HOSPITAL_ADMIN"],
+      requiredPermission: "security.manage",
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const { searchParams } = new URL(req.url);
     const role = searchParams.get("role") || undefined;
 
@@ -51,6 +62,15 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: ["SUPER_ADMIN", "ADMIN", "HOSPITAL_ADMIN"],
+      requiredPermission: "security.manage",
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const body = await req.json();
     const { role, module, permissions } = body;
 
@@ -59,6 +79,15 @@ export async function POST(req: NextRequest) {
     }
 
     const updated = AdminService.updateRolePermission(role, module, permissions);
+
+    HMSService.recordAuditLog(
+      auth.staff.id,
+      auth.staff.name,
+      auth.staff.role,
+      "roles.update_permissions",
+      `roles/${role}/${module}`,
+      { role, module, permissions }
+    );
 
     return NextResponse.json({
       success: true,
@@ -70,3 +99,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to update role permissions." }, { status: 500 });
   }
 }
+

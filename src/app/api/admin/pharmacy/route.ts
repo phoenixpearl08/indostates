@@ -1,11 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { HMSService } from "@/lib/hmsService";
 import { UserRole } from "@/types/hms";
+import { requireServerAuth, ADMIN_ACCESS_ROLES } from "@/lib/serverAuth";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: [...ADMIN_ACCESS_ROLES, "PHARMACY_STAFF", "PHARMACY_MANAGER", "DOCTOR", "NURSE"],
+      requiredPermission: "prescription.read",
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const inventory = HMSService.getPharmacyInventory();
     const prescriptions = HMSService.getPrescriptions();
 
@@ -39,14 +49,24 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: [...ADMIN_ACCESS_ROLES, "PHARMACY_STAFF", "PHARMACY_MANAGER"],
+      requiredPermission: "pharmacy.stock",
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const body = await req.json();
     const { action } = body;
 
     const actor = {
-      id: "admin",
-      name: "Chief Pharmacist",
-      role: "HOSPITAL_ADMIN" as UserRole,
+      id: auth.staff.id,
+      name: auth.staff.name,
+      role: auth.staff.role as UserRole,
     };
+
 
     if (action === "adjust_stock") {
       const { itemCode, quantityChange, reason } = body;

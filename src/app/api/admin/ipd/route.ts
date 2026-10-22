@@ -2,11 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { HMSService } from "@/lib/hmsService";
 import { BedStatus, UserRole } from "@/types/hms";
 import { DOCTORS } from "@/data/hospitalData";
+import { requireServerAuth, ADMIN_ACCESS_ROLES } from "@/lib/serverAuth";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: [...ADMIN_ACCESS_ROLES, "DOCTOR", "NURSE", "HOUSEKEEPING_STAFF"],
+      requiredPermission: "ipd.read",
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const wards = HMSService.getWards();
     const rooms = HMSService.getRooms();
     const beds = HMSService.getBeds();
@@ -34,14 +44,24 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: [...ADMIN_ACCESS_ROLES, "DOCTOR", "NURSE", "HOUSEKEEPING_STAFF"],
+      requiredPermission: "ipd.write",
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const body = await req.json();
     const { action } = body;
 
     const actor = {
-      id: "admin",
-      name: "Hospital Administrator",
-      role: "HOSPITAL_ADMIN" as UserRole,
+      id: auth.staff.id,
+      name: auth.staff.name,
+      role: auth.staff.role as UserRole,
     };
+
 
     if (action === "admit") {
       const { patientUhid, doctorId, wardId, bedId, admissionReason } = body;

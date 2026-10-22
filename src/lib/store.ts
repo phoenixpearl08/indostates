@@ -154,19 +154,6 @@ export class HospitalStore {
         } catch {}
       }
 
-      if (cookies["ish_auth_role"]) {
-        const role = cookies["ish_auth_role"].toUpperCase();
-        const roleName = role === "DOCTOR" ? "Dr. Rajesh Rangaswamy" : role === "PATIENT" ? "Patient" : "Administrator";
-        const session: UserSession = {
-          id: `usr-${role.toLowerCase()}`,
-          name: roleName,
-          email: `${role.toLowerCase()}@indostates.com`,
-          role: role as any,
-        };
-        localStorage.setItem(STORAGE_KEYS.USER_SESSION, JSON.stringify(session));
-        return session;
-      }
-
       return null;
     } catch {
       return null;

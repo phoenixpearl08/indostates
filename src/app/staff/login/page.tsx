@@ -70,8 +70,9 @@ function StaffLoginForm() {
         email: staff.email,
         role: staff.role,
         department: staff.department,
-        token: `ish-stf-sig-${staff.role.toLowerCase()}-${Date.now()}`,
+        token: staff.token || data.token || "",
       };
+
 
       HospitalStore.setSession(session);
 

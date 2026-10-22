@@ -4,7 +4,8 @@ import { OTPService } from "@/lib/otpService";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { phone, otp, fullName, dateOfBirth, age, gender, email } = body;
+    const { phone, fullName, dateOfBirth, age, gender, email } = body;
+    const otp = body.otp || body.code;
 
     if (!phone || !otp) {
       return NextResponse.json(
@@ -46,6 +47,8 @@ export async function POST(req: NextRequest) {
     const response = NextResponse.json({
       success: true,
       user: userObj,
+      patient: patient,
+      session: userObj,
       uhid: patient.uhid,
       isNewPatient: result.isNewPatient,
       redirectUrl: "/patient/dashboard",

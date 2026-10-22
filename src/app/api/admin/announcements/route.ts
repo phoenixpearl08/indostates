@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AdminService } from "@/lib/adminService";
+import { requireServerAuth, ADMIN_ACCESS_ROLES } from "@/lib/serverAuth";
+import { HMSService } from "@/lib/hmsService";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: ADMIN_ACCESS_ROLES,
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const { searchParams } = new URL(req.url);
     const publishedOnly = searchParams.get("published") === "true";
 
@@ -18,6 +28,14 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: ADMIN_ACCESS_ROLES,
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const body = await req.json();
     const { title, content, priority, targetAudience, isPublished } = body;
 
@@ -32,8 +50,17 @@ export async function POST(req: NextRequest) {
       targetAudience: targetAudience || "All",
       isPublished: isPublished !== undefined ? isPublished : true,
       publishedAt: new Date().toISOString(),
-      createdBy: "Hospital Administration",
+      createdBy: auth.staff.name,
     });
+
+    HMSService.recordAuditLog(
+      auth.staff.id,
+      auth.staff.name,
+      auth.staff.role,
+      "announcement.create",
+      `announcements/${announcement.id}`,
+      { title: announcement.title, priority: announcement.priority }
+    );
 
     return NextResponse.json({
       success: true,
@@ -48,6 +75,14 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: ADMIN_ACCESS_ROLES,
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const body = await req.json();
     const { id, title, content, priority, targetAudience, isPublished } = body;
 
@@ -67,6 +102,15 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "Announcement not found." }, { status: 404 });
     }
 
+    HMSService.recordAuditLog(
+      auth.staff.id,
+      auth.staff.name,
+      auth.staff.role,
+      "announcement.update",
+      `announcements/${id}`,
+      { id, title: updated.title }
+    );
+
     return NextResponse.json({
       success: true,
       announcement: updated,
@@ -80,6 +124,14 @@ export async function PUT(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: ADMIN_ACCESS_ROLES,
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
 
@@ -92,6 +144,15 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "Announcement not found." }, { status: 404 });
     }
 
+    HMSService.recordAuditLog(
+      auth.staff.id,
+      auth.staff.name,
+      auth.staff.role,
+      "announcement.delete",
+      `announcements/${id}`,
+      { id }
+    );
+
     return NextResponse.json({
       success: true,
       message: "Announcement deleted successfully.",
@@ -101,3 +162,4 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "Failed to delete announcement." }, { status: 500 });
   }
 }
+

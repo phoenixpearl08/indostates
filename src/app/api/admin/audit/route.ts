@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { HMSService } from "@/lib/hmsService";
+import { requireServerAuth } from "@/lib/serverAuth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: ["SUPER_ADMIN", "ADMIN", "HOSPITAL_ADMIN", "MEDICAL_DIRECTOR", "FINANCE_MANAGER"],
+      requiredPermission: "audit.read",
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const { searchParams } = new URL(req.url);
     const actor = searchParams.get("actor") || undefined;
     const action = searchParams.get("action") || undefined;

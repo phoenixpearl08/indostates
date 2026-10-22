@@ -1,11 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { HMSService } from "@/lib/hmsService";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
+import { requireServerAuth, ADMIN_ACCESS_ROLES } from "@/lib/serverAuth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: [...ADMIN_ACCESS_ROLES, "DOCTOR", "NURSE", "RECEPTIONIST"],
+      requiredPermission: "patient.read",
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const { searchParams } = new URL(req.url);
     const uhidParam = searchParams.get("uhid");
     const query = searchParams.get("query");
@@ -49,7 +59,11 @@ export async function GET(req: NextRequest) {
       try {
         const admin = getSupabaseAdmin();
         if (admin) {
-          const { data } = await admin.from("patients").select("*");
+          const { data } = await admin
+            .from("patients")
+            .select("id, uhid, full_name, email, phone, age, gender, blood_group, account_status, created_at")
+            .order("created_at", { ascending: false })
+            .limit(100);
           if (data && data.length > 0) {
             const supaPatients = data.map((d: any) => ({
               id: d.id,
@@ -91,6 +105,15 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: [...ADMIN_ACCESS_ROLES, "RECEPTIONIST"],
+      requiredPermission: "patient.update",
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const body = await req.json();
     const { fullName, email, phone, age, gender, bloodGroup, address } = body;
 
@@ -111,9 +134,9 @@ export async function POST(req: NextRequest) {
     });
 
     HMSService.recordAuditLog(
-      "admin",
-      "Hospital Administrator",
-      "HOSPITAL_ADMIN",
+      auth.staff.id,
+      auth.staff.name,
+      auth.staff.role,
       "patient.create",
       `patients/${patient.uhid}`,
       { uhid: patient.uhid, name: patient.fullName, phone: patient.phone }
@@ -132,6 +155,15 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
+    const auth = await requireServerAuth(req, {
+      allowedRoles: [...ADMIN_ACCESS_ROLES, "RECEPTIONIST"],
+      requiredPermission: "patient.update",
+    });
+
+    if (!auth.authorized || !auth.staff) {
+      return auth.response!;
+    }
+
     const body = await req.json();
     const { uhid, accountStatus, fullName, phone, bloodGroup, address } = body;
 
@@ -173,9 +205,9 @@ export async function PUT(req: NextRequest) {
     }
 
     HMSService.recordAuditLog(
-      "admin",
-      "Hospital Administrator",
-      "HOSPITAL_ADMIN",
+      auth.staff.id,
+      auth.staff.name,
+      auth.staff.role,
       "patient.admin_update",
       `patients/${uhid}`,
       { uhid, updatedFields: Object.keys(body).filter((k) => k !== "uhid") }
@@ -191,3 +223,4 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "Failed to update patient." }, { status: 500 });
   }
 }
+
